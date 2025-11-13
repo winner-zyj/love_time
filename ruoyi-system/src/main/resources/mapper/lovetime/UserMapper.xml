@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.UserMapper">
+
+    <resultMap type="User" id="UserResult">
+        <result property="id" column="id"/>
+        <result property="openid" column="openid"/>
+        <result property="code" column="code"/>
+        <result property="nickName" column="nickName"/>
+        <result property="avatarUrl" column="avatarUrl"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <sql id="selectUserVo">
+        select id, openid, code, nickName, avatarUrl, created_at from at_users
+    </sql>
+
+    <select id="selectUserList" parameterType="User" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        <where>
+            <if test="openid != null  and openid != ''">and openid = #{openid}</if>
+            <if test="code != null  and code != ''">and code = #{code}</if>
+            <if test="nickName != null  and nickName != ''">and nickName like concat('%', #{nickName}, '%')</if>
+        </where>
+    </select>
+
+    <select id="selectUserById" parameterType="Long" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectUserByOpenid" parameterType="String" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where openid = #{openid}
+    </select>
+
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into at_users
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="openid != null">openid,</if>
+            <if test="code != null">code,</if>
+            <if test="nickName != null">nickName,</if>
+            <if test="avatarUrl != null">avatarUrl,</if>
+            created_at,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="openid != null">#{openid},</if>
+            <if test="code != null">#{code},</if>
+            <if test="nickName != null">#{nickName},</if>
+            <if test="avatarUrl != null">#{avatarUrl},</if>
+            sysdate(),
+        </trim>
+    </insert>
+
+    <update id="updateUser" parameterType="User">
+        update at_users
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="openid != null">openid = #{openid},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="nickName != null">nickName = #{nickName},</if>
+            <if test="avatarUrl != null">avatarUrl = #{avatarUrl},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUserById" parameterType="Long">
+        delete from at_users where id = #{id}
+    </delete>
+
+    <delete id="deleteUserByIds" parameterType="Long">
+        delete from at_users where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
