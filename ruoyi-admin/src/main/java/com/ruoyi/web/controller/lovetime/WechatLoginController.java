@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.annotation.Anonymous;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.lovetime.WechatLoginRequest;
 import com.ruoyi.common.core.domain.lovetime.WechatLoginResponse;
@@ -22,6 +23,7 @@ import com.ruoyi.common.core.domain.entity.SysUser;
  */
 @RestController
 @RequestMapping("/api/login")
+@Anonymous
 public class WechatLoginController {
 
     @Autowired
@@ -33,6 +35,7 @@ public class WechatLoginController {
     /**
      * 微信登录
      */
+    @Anonymous
     @PostMapping("/wechat")
     public AjaxResult wechatLogin(@RequestBody WechatLoginRequest loginRequest) {
         try {
