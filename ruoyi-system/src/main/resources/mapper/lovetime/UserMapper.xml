@@ -9,32 +9,53 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="openid" column="openid"/>
         <result property="sessionKey" column="session_key"/>
         <result property="code" column="code"/>
+        <result property="inviteCode" column="invite_code"/>
+        <result property="coupleId" column="couple_id"/>
         <result property="nickName" column="nickName"/>
         <result property="avatarUrl" column="avatarUrl"/>
         <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <sql id="selectUserVo">
-        select id, openid, session_key, code, nickName, avatarUrl, created_at from at_users
+        select u.id, u.openid, u.session_key, u.code, u.invite_code, cr.couple_id, u.nickName, u.avatarUrl, u.created_at, u.updated_at 
+        from at_users u 
+        left join at_couple_relationships cr on (u.id = cr.user1_id or u.id = cr.user2_id) and cr.status = 'active'
     </sql>
 
     <select id="selectUserList" parameterType="User" resultMap="UserResult">
         <include refid="selectUserVo"/>
         <where>
-            <if test="openid != null  and openid != ''">and openid = #{openid}</if>
-            <if test="code != null  and code != ''">and code = #{code}</if>
-            <if test="nickName != null  and nickName != ''">and nickName like concat('%', #{nickName}, '%')</if>
+            <if test="openid != null  and openid != ''">and u.openid = #{openid}</if>
+            <if test="code != null  and code != ''">and u.code = #{code}</if>
+            <if test="inviteCode != null  and inviteCode != ''">and u.invite_code = #{inviteCode}</if>
+            <if test="coupleId != null">and cr.couple_id = #{coupleId}</if>
+            <if test="nickName != null  and nickName != ''">and u.nickName like concat('%', #{nickName}, '%')</if>
         </where>
     </select>
 
     <select id="selectUserById" parameterType="Long" resultMap="UserResult">
         <include refid="selectUserVo"/>
-        where id = #{id}
+        where u.id = #{id}
     </select>
 
     <select id="selectUserByOpenid" parameterType="String" resultMap="UserResult">
         <include refid="selectUserVo"/>
-        where openid = #{openid}
+        where u.openid = #{openid}
+    </select>
+
+    <select id="selectUserByCode" parameterType="String" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where u.code = #{code}
+    </select>
+
+    <select id="selectUserByInviteCode" parameterType="String" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where u.invite_code = #{inviteCode}
+    </select>
+
+    <select id="existsByInviteCode" parameterType="String" resultType="int">
+        select count(1) from at_users where invite_code = #{inviteCode}
     </select>
 
     <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
@@ -43,16 +64,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="openid != null">openid,</if>
             <if test="sessionKey != null">session_key,</if>
             <if test="code != null">code,</if>
+            <if test="inviteCode != null">invite_code,</if>
             <if test="nickName != null">nickName,</if>
             <if test="avatarUrl != null">avatarUrl,</if>
             created_at,
+            updated_at,
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="openid != null">#{openid},</if>
             <if test="sessionKey != null">#{sessionKey},</if>
             <if test="code != null">#{code},</if>
+            <if test="inviteCode != null">#{inviteCode},</if>
             <if test="nickName != null">#{nickName},</if>
             <if test="avatarUrl != null">#{avatarUrl},</if>
+            sysdate(),
             sysdate(),
         </trim>
     </insert>
@@ -63,8 +88,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="openid != null">openid = #{openid},</if>
             <if test="sessionKey != null">session_key = #{sessionKey},</if>
             <if test="code != null">code = #{code},</if>
+            <if test="inviteCode != null">invite_code = #{inviteCode},</if>
             <if test="nickName != null">nickName = #{nickName},</if>
             <if test="avatarUrl != null">avatarUrl = #{avatarUrl},</if>
+            updated_at = sysdate(),
         </trim>
         where id = #{id}
     </update>

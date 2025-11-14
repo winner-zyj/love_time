@@ -13,6 +13,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.lovetime.WechatLoginRequest;
 import com.ruoyi.common.core.domain.lovetime.WechatLoginResponse;
 import com.ruoyi.common.core.domain.lovetime.User;
+import com.ruoyi.common.utils.InviteCodeUtil;
 import com.ruoyi.lovetime.service.IUserService;
 import com.ruoyi.framework.web.service.TokenService;
 import com.ruoyi.common.core.domain.model.LoginUser;
@@ -79,13 +80,16 @@ public class WechatLoginController {
                 user.setNickName(loginRequest.getNickName());
                 user.setAvatarUrl(loginRequest.getAvatarUrl());
                 
-                // 生成邀请码
-                String inviteCode = generateInviteCode();
-                user.setCode(inviteCode);
+                // 设置临时登录凭证
+                user.setCode(loginRequest.getCode());
+                
+                // 生成唯一的6位大写英文字母和数字结合的邀请码
+                String inviteCode = InviteCodeUtil.generateUniqueInviteCode(userService::existsByInviteCode);
+                user.setInviteCode(inviteCode);
                 
                 // 插入新用户
                 userService.insertUser(user);
-                
+
                 // 重新查询以获取完整的用户信息（包括ID）
                 user = userService.selectUserByOpenid(openid);
             } else {
@@ -93,6 +97,8 @@ public class WechatLoginController {
                 user.setSessionKey(sessionKey);
                 user.setNickName(loginRequest.getNickName());
                 user.setAvatarUrl(loginRequest.getAvatarUrl());
+                // 更新临时登录凭证
+                user.setCode(loginRequest.getCode());
                 userService.updateUser(user);
             }
 
@@ -115,20 +121,5 @@ public class WechatLoginController {
             log.error("微信登录过程中发生异常", e);
             return AjaxResult.error("登录失败: " + e.getMessage());
         }
-    }
-
-    /**
-     * 生成邀请码
-     * @return 邀请码
-     */
-    private String generateInviteCode() {
-        // 生成8位随机邀请码
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
-            int index = (int) (Math.random() * chars.length());
-            sb.append(chars.charAt(index));
-        }
-        return sb.toString();
     }
 }

@@ -44,10 +44,46 @@ public class UserServiceImpl implements IUserService
     }
 
     /**
+     * 根据临时登录凭证查询用户
+     * 
+     * @param code 临时登录凭证
+     * @return 用户
+     */
+    @Override
+    public User selectUserByCode(String code)
+    {
+        return userMapper.selectUserByCode(code);
+    }
+
+    /**
+     * 根据邀请码查询用户
+     * 
+     * @param inviteCode 邀请码
+     * @return 用户
+     */
+    @Override
+    public User selectUserByInviteCode(String inviteCode)
+    {
+        return userMapper.selectUserByInviteCode(inviteCode);
+    }
+
+    /**
+     * 检查邀请码是否存在
+     * 
+     * @param inviteCode 邀请码
+     * @return 是否存在
+     */
+    @Override
+    public boolean existsByInviteCode(String inviteCode)
+    {
+        return userMapper.existsByInviteCode(inviteCode) > 0;
+    }
+
+    /**
      * 查询用户列表
      * 
      * @param user 用户
-     * @return 用户
+     * @return 用户集合
      */
     @Override
     public List<User> selectUserList(User user)
@@ -82,7 +118,7 @@ public class UserServiceImpl implements IUserService
     /**
      * 批量删除用户
      * 
-     * @param ids 需要删除的用户ID
+     * @param ids 需要删除的数据ID
      * @return 结果
      */
     @Override

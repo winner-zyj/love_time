@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.CoupleRelationshipMapper">
+
+    <resultMap type="CoupleRelationship" id="CoupleRelationshipResult">
+        <result property="id" column="id"/>
+        <result property="user1Id" column="user1_id"/>
+        <result property="user2Id" column="user2_id"/>
+        <result property="status" column="status"/>
+        <result property="initiatorId" column="initiator_id"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="relationshipName" column="relationship_name"/>
+        <result property="anniversaryDate" column="anniversary_date"/>
+        <result property="requestMessage" column="request_message"/>
+        <result property="coupleId" column="couple_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="confirmedAt" column="confirmed_at"/>
+        <result property="rejectedAt" column="rejected_at"/>
+        <result property="brokenAt" column="broken_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="selectCoupleRelationshipVo">
+        select id, user1_id, user2_id, status, initiator_id, receiver_id, relationship_name, anniversary_date, request_message, couple_id, created_at, confirmed_at, rejected_at, broken_at, updated_at from at_couple_relationships
+    </sql>
+
+    <select id="selectCoupleRelationshipList" parameterType="CoupleRelationship" resultMap="CoupleRelationshipResult">
+        <include refid="selectCoupleRelationshipVo"/>
+        <where>
+            <if test="user1Id != null">and user1_id = #{user1Id}</if>
+            <if test="user2Id != null">and user2_id = #{user2Id}</if>
+            <if test="status != null  and status != ''">and status = #{status}</if>
+            <if test="initiatorId != null">and initiator_id = #{initiatorId}</if>
+            <if test="receiverId != null">and receiver_id = #{receiverId}</if>
+            <if test="coupleId != null">and couple_id = #{coupleId}</if>
+        </where>
+    </select>
+
+    <select id="selectCoupleRelationshipById" parameterType="Long" resultMap="CoupleRelationshipResult">
+        <include refid="selectCoupleRelationshipVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectCoupleRelationshipByUserId" parameterType="Long" resultMap="CoupleRelationshipResult">
+        <include refid="selectCoupleRelationshipVo"/>
+        where (user1_id = #{userId} or user2_id = #{userId}) and status = 'active'
+    </select>
+
+    <insert id="insertCoupleRelationship" parameterType="CoupleRelationship" useGeneratedKeys="true" keyProperty="id">
+        insert into at_couple_relationships
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="user1Id != null">user1_id,</if>
+            <if test="user2Id != null">user2_id,</if>
+            <if test="status != null">status,</if>
+            <if test="initiatorId != null">initiator_id,</if>
+            <if test="receiverId != null">receiver_id,</if>
+            <if test="relationshipName != null">relationship_name,</if>
+            <if test="anniversaryDate != null">anniversary_date,</if>
+            <if test="requestMessage != null">request_message,</if>
+            <if test="coupleId != null">couple_id,</if>
+            created_at,
+            updated_at,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="user1Id != null">#{user1Id},</if>
+            <if test="user2Id != null">#{user2Id},</if>
+            <if test="status != null">#{status},</if>
+            <if test="initiatorId != null">#{initiatorId},</if>
+            <if test="receiverId != null">#{receiverId},</if>
+            <if test="relationshipName != null">#{relationshipName},</if>
+            <if test="anniversaryDate != null">#{anniversaryDate},</if>
+            <if test="requestMessage != null">#{requestMessage},</if>
+            <if test="coupleId != null">#{coupleId},</if>
+            sysdate(),
+            sysdate(),
+        </trim>
+    </insert>
+
+    <update id="updateCoupleRelationship" parameterType="CoupleRelationship">
+        update at_couple_relationships
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="user1Id != null">user1_id = #{user1Id},</if>
+            <if test="user2Id != null">user2_id = #{user2Id},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="initiatorId != null">initiator_id = #{initiatorId},</if>
+            <if test="receiverId != null">receiver_id = #{receiverId},</if>
+            <if test="relationshipName != null">relationship_name = #{relationshipName},</if>
+            <if test="anniversaryDate != null">anniversary_date = #{anniversaryDate},</if>
+            <if test="requestMessage != null">request_message = #{requestMessage},</if>
+            <if test="coupleId != null">couple_id = #{coupleId},</if>
+            updated_at = sysdate(),
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCoupleRelationshipById" parameterType="Long">
+        delete from at_couple_relationships where id = #{id}
+    </delete>
+
+    <delete id="deleteCoupleRelationshipByIds" parameterType="Long">
+        delete from at_couple_relationships where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
