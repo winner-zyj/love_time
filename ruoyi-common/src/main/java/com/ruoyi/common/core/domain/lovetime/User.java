@@ -18,6 +18,9 @@ public class User
     /** 微信openid */
     private String openid;
 
+    /** 微信session_key */
+    private String sessionKey;
+
     /** 邀请码 */
     private String code;
 
@@ -33,9 +36,10 @@ public class User
     public User() {
     }
 
-    public User(Long id, String openid, String code, String nickName, String avatarUrl, Date createdAt) {
+    public User(Long id, String openid, String sessionKey, String code, String nickName, String avatarUrl, Date createdAt) {
         this.id = id;
         this.openid = openid;
+        this.sessionKey = sessionKey;
         this.code = code;
         this.nickName = nickName;
         this.avatarUrl = avatarUrl;
@@ -56,6 +60,14 @@ public class User
 
     public void setOpenid(String openid) {
         this.openid = openid;
+    }
+
+    public String getSessionKey() {
+        return sessionKey;
+    }
+
+    public void setSessionKey(String sessionKey) {
+        this.sessionKey = sessionKey;
     }
 
     public String getCode() {
@@ -95,6 +107,7 @@ public class User
         return "User{" +
                 "id=" + id +
                 ", openid='" + openid + '\'' +
+                ", sessionKey='" + sessionKey + '\'' +
                 ", code='" + code + '\'' +
                 ", nickName='" + nickName + '\'' +
                 ", avatarUrl='" + avatarUrl + '\'' +
