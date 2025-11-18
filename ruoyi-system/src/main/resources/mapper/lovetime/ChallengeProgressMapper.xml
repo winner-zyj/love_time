@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.ChallengeProgressMapper">
+    
+    <resultMap type="ChallengeProgress" id="ChallengeProgressResult">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="totalTasks" column="total_tasks"/>
+        <result property="completedCount" column="completed_count"/>
+        <result property="favoritedCount" column="favorited_count"/>
+        <result property="completionRate" column="completion_rate"/>
+        <result property="lastActiveAt" column="last_active_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    
+    <sql id="selectChallengeProgressVo">
+        select id, user_id, total_tasks, completed_count, favorited_count, completion_rate, last_active_at, created_at from at_challenge_progress
+    </sql>
+    
+    <select id="selectChallengeProgressByUserId" parameterType="Long" resultMap="ChallengeProgressResult">
+        <include refid="selectChallengeProgressVo"/>
+        where user_id = #{userId}
+    </select>
+    
+    <select id="selectChallengeProgressById" parameterType="Long" resultMap="ChallengeProgressResult">
+        <include refid="selectChallengeProgressVo"/>
+        where id = #{id}
+    </select>
+    
+    <insert id="insertChallengeProgress" parameterType="ChallengeProgress" useGeneratedKeys="true" keyProperty="id">
+        insert into at_challenge_progress
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="totalTasks != null">total_tasks,</if>
+            <if test="completedCount != null">completed_count,</if>
+            <if test="favoritedCount != null">favorited_count,</if>
+            <if test="completionRate != null">completion_rate,</if>
+            <if test="lastActiveAt != null">last_active_at,</if>
+            <if test="createdAt != null">created_at,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="totalTasks != null">#{totalTasks},</if>
+            <if test="completedCount != null">#{completedCount},</if>
+            <if test="favoritedCount != null">#{favoritedCount},</if>
+            <if test="completionRate != null">#{completionRate},</if>
+            <if test="lastActiveAt != null">#{lastActiveAt},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+        </trim>
+    </insert>
+    
+    <update id="updateChallengeProgress" parameterType="ChallengeProgress">
+        update at_challenge_progress
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="totalTasks != null">total_tasks = #{totalTasks},</if>
+            <if test="completedCount != null">completed_count = #{completedCount},</if>
+            <if test="favoritedCount != null">favorited_count = #{favoritedCount},</if>
+            <if test="completionRate != null">completion_rate = #{completionRate},</if>
+            <if test="lastActiveAt != null">last_active_at = #{lastActiveAt},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </set>
+        where id = #{id}
+    </update>
+    
+    <delete id="deleteChallengeProgressById" parameterType="Long">
+        delete from at_challenge_progress where id = #{id}
+    </delete>
+    
+    <delete id="deleteChallengeProgressByIds" parameterType="Long">
+        delete from at_challenge_progress where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

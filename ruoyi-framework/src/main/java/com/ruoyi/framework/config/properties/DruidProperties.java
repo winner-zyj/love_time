@@ -84,6 +84,14 @@ public class DruidProperties
         datasource.setTestOnBorrow(testOnBorrow);
         /** 归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。 */
         datasource.setTestOnReturn(testOnReturn);
+        
+        // 设置事务相关属性
+        datasource.setDefaultAutoCommit(false);
+        
+        // 确保连接池配置正确
+        datasource.setPoolPreparedStatements(true);
+        datasource.setMaxPoolPreparedStatementPerConnectionSize(20);
+        
         return datasource;
     }
 }

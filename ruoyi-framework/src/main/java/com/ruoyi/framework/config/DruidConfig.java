@@ -37,6 +37,8 @@ public class DruidConfig
     public DataSource masterDataSource(DruidProperties druidProperties)
     {
         DruidDataSource dataSource = DruidDataSourceBuilder.create().build();
+        // 确保事务管理正确配置
+        dataSource.setDefaultAutoCommit(false);
         return druidProperties.dataSource(dataSource);
     }
 
@@ -46,6 +48,8 @@ public class DruidConfig
     public DataSource slaveDataSource(DruidProperties druidProperties)
     {
         DruidDataSource dataSource = DruidDataSourceBuilder.create().build();
+        // 确保事务管理正确配置
+        dataSource.setDefaultAutoCommit(false);
         return druidProperties.dataSource(dataSource);
     }
 

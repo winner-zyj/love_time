@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.HeartWallPhotoMapper">
+    
+    <resultMap type="HeartWallPhoto" id="HeartWallPhotoResult">
+        <result property="id" column="id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="photoUrl" column="photo_url"/>
+        <result property="thumbnailUrl" column="thumbnail_url"/>
+        <result property="positionIndex" column="position_index"/>
+        <result property="caption" column="caption"/>
+        <result property="takenDate" column="taken_date"/>
+        <result property="uploadedAt" column="uploaded_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    
+    <sql id="selectHeartWallPhotoVo">
+        select id, project_id, user_id, photo_url, thumbnail_url, position_index, caption, taken_date, uploaded_at, updated_at from at_heart_wall_photos
+    </sql>
+    
+    <select id="selectHeartWallPhotoList" parameterType="HeartWallPhoto" resultMap="HeartWallPhotoResult">
+        <include refid="selectHeartWallPhotoVo"/>
+        <where>
+            <if test="projectId != null "> and project_id = #{projectId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="positionIndex != null "> and position_index = #{positionIndex}</if>
+        </where>
+        order by position_index asc
+    </select>
+    
+    <select id="selectHeartWallPhotosByProjectId" parameterType="map" resultMap="HeartWallPhotoResult">
+        <include refid="selectHeartWallPhotoVo"/>
+        where project_id = #{projectId}
+        order by position_index asc
+    </select>
+    
+    <select id="selectHeartWallPhotoById" parameterType="Long" resultMap="HeartWallPhotoResult">
+        <include refid="selectHeartWallPhotoVo"/>
+        where id = #{id}
+    </select>
+    
+    <select id="selectHeartWallPhotoByProjectAndPosition" parameterType="map" resultMap="HeartWallPhotoResult">
+        <include refid="selectHeartWallPhotoVo"/>
+        where project_id = #{projectId} and position_index = #{positionIndex}
+    </select>
+    
+    <insert id="insertHeartWallPhoto" parameterType="HeartWallPhoto" useGeneratedKeys="true" keyProperty="id">
+        insert into at_heart_wall_photos
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">project_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="photoUrl != null and photoUrl != ''">photo_url,</if>
+            <if test="thumbnailUrl != null">thumbnail_url,</if>
+            <if test="positionIndex != null">position_index,</if>
+            <if test="caption != null">caption,</if>
+            <if test="takenDate != null">taken_date,</if>
+            <if test="uploadedAt != null">uploaded_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">#{projectId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="photoUrl != null and photoUrl != ''">#{photoUrl},</if>
+            <if test="thumbnailUrl != null">#{thumbnailUrl},</if>
+            <if test="positionIndex != null">#{positionIndex},</if>
+            <if test="caption != null">#{caption},</if>
+            <if test="takenDate != null">#{takenDate},</if>
+            <if test="uploadedAt != null">#{uploadedAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+        </trim>
+    </insert>
+    
+    <update id="updateHeartWallPhoto" parameterType="HeartWallPhoto">
+        update at_heart_wall_photos
+        <set>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="photoUrl != null and photoUrl != ''">photo_url = #{photoUrl},</if>
+            <if test="thumbnailUrl != null">thumbnail_url = #{thumbnailUrl},</if>
+            <if test="positionIndex != null">position_index = #{positionIndex},</if>
+            <if test="caption != null">caption = #{caption},</if>
+            <if test="takenDate != null">taken_date = #{takenDate},</if>
+            <if test="uploadedAt != null">uploaded_at = #{uploadedAt},</if>
+            updated_at = #{updatedAt},
+        </set>
+        where id = #{id}
+    </update>
+    
+    <delete id="deleteHeartWallPhotoById" parameterType="Long">
+        delete from at_heart_wall_photos where id = #{id}
+    </delete>
+    
+    <delete id="deleteHeartWallPhotoByIds" parameterType="Long">
+        delete from at_heart_wall_photos where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteHeartWallPhotosByProjectId" parameterType="map">
+        delete from at_heart_wall_photos where project_id = #{projectId}
+    </delete>
+</mapper>

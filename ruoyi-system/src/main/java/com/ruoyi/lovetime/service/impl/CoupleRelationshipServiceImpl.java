@@ -1,8 +1,11 @@
 package com.ruoyi.lovetime.service.impl;
 
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.ruoyi.lovetime.mapper.CoupleRelationshipMapper;
 import com.ruoyi.common.core.domain.lovetime.CoupleRelationship;
 import com.ruoyi.lovetime.service.ICoupleRelationshipService;
@@ -16,6 +19,8 @@ import com.ruoyi.lovetime.service.ICoupleRelationshipService;
 @Service
 public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
 {
+    private static final Logger log = LoggerFactory.getLogger(CoupleRelationshipServiceImpl.class);
+    
     @Autowired
     private CoupleRelationshipMapper coupleRelationshipMapper;
 
@@ -28,7 +33,10 @@ public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
     @Override
     public CoupleRelationship selectCoupleRelationshipById(Long id)
     {
-        return coupleRelationshipMapper.selectCoupleRelationshipById(id);
+        log.info("查询情侣关系，ID: {}", id);
+        CoupleRelationship relationship = coupleRelationshipMapper.selectCoupleRelationshipById(id);
+        log.info("查询情侣关系结果: {}", relationship != null ? "找到" : "未找到");
+        return relationship;
     }
 
     /**
@@ -40,7 +48,10 @@ public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
     @Override
     public CoupleRelationship selectCoupleRelationshipByUserId(Long userId)
     {
-        return coupleRelationshipMapper.selectCoupleRelationshipByUserId(userId);
+        log.info("根据用户ID查询情侣关系，用户ID: {}", userId);
+        CoupleRelationship relationship = coupleRelationshipMapper.selectCoupleRelationshipByUserId(userId);
+        log.info("根据用户ID查询情侣关系结果: {}", relationship != null ? "找到" : "未找到");
+        return relationship;
     }
 
     /**
@@ -52,7 +63,10 @@ public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
     @Override
     public List<CoupleRelationship> selectCoupleRelationshipList(CoupleRelationship coupleRelationship)
     {
-        return coupleRelationshipMapper.selectCoupleRelationshipList(coupleRelationship);
+        log.info("查询情侣关系列表");
+        List<CoupleRelationship> relationships = coupleRelationshipMapper.selectCoupleRelationshipList(coupleRelationship);
+        log.info("查询情侣关系列表结果，数量: {}", relationships != null ? relationships.size() : 0);
+        return relationships;
     }
 
     /**
@@ -62,9 +76,18 @@ public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
      * @return 结果
      */
     @Override
+    @Transactional
     public int insertCoupleRelationship(CoupleRelationship coupleRelationship)
     {
-        return coupleRelationshipMapper.insertCoupleRelationship(coupleRelationship);
+        log.info("新增情侣关系: user1Id={}, user2Id={}, status={}, initiatorId={}, receiverId={}",
+            coupleRelationship.getUser1Id(), coupleRelationship.getUser2Id(),
+            coupleRelationship.getStatus(), coupleRelationship.getInitiatorId(),
+            coupleRelationship.getReceiverId());
+        
+        int result = coupleRelationshipMapper.insertCoupleRelationship(coupleRelationship);
+        
+        log.info("新增情侣关系结果: {}, 生成的ID: {}", result, coupleRelationship.getId());
+        return result;
     }
 
     /**
@@ -74,9 +97,15 @@ public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
      * @return 结果
      */
     @Override
+    @Transactional
     public int updateCoupleRelationship(CoupleRelationship coupleRelationship)
     {
-        return coupleRelationshipMapper.updateCoupleRelationship(coupleRelationship);
+        log.info("修改情侣关系，ID: {}, coupleId: {}", coupleRelationship.getId(), coupleRelationship.getCoupleId());
+        
+        int result = coupleRelationshipMapper.updateCoupleRelationship(coupleRelationship);
+        
+        log.info("修改情侣关系结果: {}", result);
+        return result;
     }
 
     /**
@@ -86,9 +115,15 @@ public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
      * @return 结果
      */
     @Override
+    @Transactional
     public int deleteCoupleRelationshipByIds(Long[] ids)
     {
-        return coupleRelationshipMapper.deleteCoupleRelationshipByIds(ids);
+        log.info("批量删除情侣关系，IDs数量: {}", ids != null ? ids.length : 0);
+        
+        int result = coupleRelationshipMapper.deleteCoupleRelationshipByIds(ids);
+        
+        log.info("批量删除情侣关系结果: {}", result);
+        return result;
     }
 
     /**
@@ -98,8 +133,14 @@ public class CoupleRelationshipServiceImpl implements ICoupleRelationshipService
      * @return 结果
      */
     @Override
+    @Transactional
     public int deleteCoupleRelationshipById(Long id)
     {
-        return coupleRelationshipMapper.deleteCoupleRelationshipById(id);
+        log.info("删除情侣关系，ID: {}", id);
+        
+        int result = coupleRelationshipMapper.deleteCoupleRelationshipById(id);
+        
+        log.info("删除情侣关系结果: {}", result);
+        return result;
     }
 }

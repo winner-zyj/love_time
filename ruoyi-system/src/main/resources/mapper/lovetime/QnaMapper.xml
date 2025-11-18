@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.QnaMapper">
+    
+    <resultMap type="QnaQuestion" id="QnaQuestionResult">
+        <result property="id" column="id"/>
+        <result property="text" column="question_text"/>
+        <result property="isDefault" column="category"/>
+        <result property="userId" column="created_by"/>
+        <result property="orderIndex" column="order_index"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    
+    <resultMap type="QnaAnswer" id="QnaAnswerResult">
+        <result property="id" column="id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="answer" column="answer_text"/>
+        <result property="answeredAt" column="answered_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    
+    <!-- 查询预设问题（按orderIndex升序，仅返回激活的问题） -->
+    <select id="selectDefaultQuestions" resultMap="QnaQuestionResult">
+        SELECT id, question_text, category, created_by, order_index, is_active, created_at, updated_at
+        FROM at_questions 
+        WHERE category = 'preset' 
+        AND is_active = 1 
+        ORDER BY order_index ASC
+    </select>
+    
+    <!-- 查询用户自定义问题（按创建时间倒序，仅返回激活的问题） -->
+    <select id="selectCustomQuestionsByUserId" parameterType="Long" resultMap="QnaQuestionResult">
+        SELECT id, question_text, category, created_by, order_index, is_active, created_at, updated_at
+        FROM at_questions 
+        WHERE category = 'custom' 
+        AND created_by = #{userId}
+        AND is_active = 1 
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 根据ID查询问题 -->
+    <select id="selectQuestionById" parameterType="Long" resultMap="QnaQuestionResult">
+        SELECT id, question_text, category, created_by, order_index, is_active, created_at, updated_at
+        FROM at_questions 
+        WHERE id = #{id}
+    </select>
+    
+    <!-- 插入问题 -->
+    <insert id="insertQuestion" parameterType="QnaQuestion" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO at_questions(question_text, category, created_by, order_index, is_active, created_at, updated_at)
+        VALUES (#{text}, 
+                #{isDefault}, 
+                #{userId}, 
+                #{orderIndex}, 
+                #{isActive}, 
+                #{createdAt}, 
+                #{updatedAt})
+    </insert>
+    
+    <!-- 更新问题 -->
+    <update id="updateQuestion" parameterType="QnaQuestion">
+        UPDATE at_questions
+        <set>
+            <if test="text != null and text != ''">question_text = #{text},</if>
+            <if test="isDefault != null and isDefault != ''">category = #{isDefault},</if>
+            <if test="userId != null">created_by = #{userId},</if>
+            <if test="orderIndex != null">order_index = #{orderIndex},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据ID删除问题 -->
+    <delete id="deleteQuestionById" parameterType="Long">
+        DELETE FROM at_questions WHERE id = #{id}
+    </delete>
+    
+    <!-- 根据用户ID和问题ID查询答案 -->
+    <select id="selectAnswerByUserAndQuestion" resultMap="QnaAnswerResult">
+        SELECT id, question_id, user_id, answer_text, answered_at, updated_at
+        FROM at_answers 
+        WHERE user_id = #{userId} AND question_id = #{questionId}
+    </select>
+    
+    <!-- 插入答案 -->
+    <insert id="insertAnswer" parameterType="QnaAnswer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO at_answers(question_id, user_id, answer_text, answered_at, updated_at)
+        VALUES (#{questionId}, #{userId}, #{answer}, #{answeredAt}, #{updatedAt})
+    </insert>
+    
+    <!-- 根据用户ID查询答案数量 -->
+    <select id="countAnswersByUserId" parameterType="Long" resultType="int">
+        SELECT COUNT(*) 
+        FROM at_answers 
+        WHERE user_id = #{userId}
+    </select>
+    
+    <!-- 根据用户ID查询答案列表（分页） -->
+    <select id="selectAnswersByUserId" resultMap="QnaAnswerResult">
+        SELECT a.id, a.question_id, a.user_id, a.answer_text, a.answered_at, a.updated_at,
+               q.question_text as questionText
+        FROM at_answers a
+        LEFT JOIN at_questions q ON a.question_id = q.id
+        WHERE a.user_id = #{userId}
+        ORDER BY a.answered_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 根据问题ID查询答案数量 -->
+    <select id="countAnswersByQuestionId" parameterType="Long" resultType="int">
+        SELECT COUNT(*) 
+        FROM at_answers 
+        WHERE question_id = #{questionId}
+    </select>
+    
+</mapper>

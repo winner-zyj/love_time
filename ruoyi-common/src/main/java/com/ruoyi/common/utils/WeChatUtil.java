@@ -70,11 +70,21 @@ public class WeChatUtil {
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(5000);
+            conn.setConnectTimeout(20000); // 增加连接超时到20秒
+            conn.setReadTimeout(20000);    // 增加读取超时到20秒
+            
+            // 检查响应码
+            int responseCode = conn.getResponseCode();
+            log.info("微信登录响应码: {}", responseCode);
             
             // 读取响应
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            BufferedReader in;
+            if (responseCode >= 200 && responseCode < 300) {
+                in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            } else {
+                in = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "UTF-8"));
+            }
+            
             String line;
             StringBuilder response = new StringBuilder();
             while ((line = in.readLine()) != null) {

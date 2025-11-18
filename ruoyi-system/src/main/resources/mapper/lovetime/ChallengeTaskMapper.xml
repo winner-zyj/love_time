@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.ChallengeTaskMapper">
+    
+    <resultMap type="ChallengeTask" id="ChallengeTaskResult">
+        <result property="id" column="id"/>
+        <result property="taskName" column="task_name"/>
+        <result property="taskDescription" column="task_description"/>
+        <result property="taskIndex" column="task_index"/>
+        <result property="category" column="category"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="iconUrl" column="icon_url"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    
+    <sql id="selectChallengeTaskVo">
+        select id, task_name, task_description, task_index, category, created_by, icon_url, is_active, created_at, updated_at from at_challenge_tasks
+    </sql>
+    
+    <select id="selectChallengeTaskList" parameterType="ChallengeTask" resultMap="ChallengeTaskResult">
+        <include refid="selectChallengeTaskVo"/>
+        <where>
+            <if test="taskName != null  and taskName != ''"> and task_name like concat('%', #{taskName}, '%')</if>
+            <if test="taskIndex != null "> and task_index = #{taskIndex}</if>
+            <if test="category != null  and category != ''"> and category = #{category}</if>
+            <if test="createdBy != null "> and created_by = #{createdBy}</if>
+            <if test="isActive != null "> and is_active = #{isActive}</if>
+        </where>
+        order by id desc
+    </select>
+    
+    <select id="selectPresetChallengeTasks" resultMap="ChallengeTaskResult">
+        select id, task_name, task_description, task_index, category, created_by, icon_url, is_active, created_at, updated_at
+        from at_challenge_tasks 
+        where category = 'preset' 
+        and is_active = 1 
+        order by task_index asc
+    </select>
+    
+    <select id="selectCustomChallengeTasksByUserId" parameterType="Long" resultMap="ChallengeTaskResult">
+        select id, task_name, task_description, task_index, category, created_by, icon_url, is_active, created_at, updated_at
+        from at_challenge_tasks 
+        where category = 'custom' 
+        and created_by = #{userId}
+        and is_active = 1 
+        order by created_at desc
+    </select>
+    
+    <select id="selectChallengeTaskById" parameterType="Long" resultMap="ChallengeTaskResult">
+        <include refid="selectChallengeTaskVo"/>
+        where id = #{id}
+    </select>
+    
+    <insert id="insertChallengeTask" parameterType="ChallengeTask" useGeneratedKeys="true" keyProperty="id">
+        insert into at_challenge_tasks
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskName != null and taskName != ''">task_name,</if>
+            <if test="taskDescription != null">task_description,</if>
+            <if test="taskIndex != null">task_index,</if>
+            <if test="category != null and category != ''">category,</if>
+            <if test="createdBy != null">created_by,</if>
+            <if test="iconUrl != null">icon_url,</if>
+            <if test="isActive != null">is_active,</if>
+            <if test="createdAt != null">created_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskName != null and taskName != ''">#{taskName},</if>
+            <if test="taskDescription != null">#{taskDescription},</if>
+            <if test="taskIndex != null">#{taskIndex},</if>
+            <if test="category != null and category != ''">#{category},</if>
+            <if test="createdBy != null">#{createdBy},</if>
+            <if test="iconUrl != null">#{iconUrl},</if>
+            <if test="isActive != null">#{isActive},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+        </trim>
+    </insert>
+    
+    <update id="updateChallengeTask" parameterType="ChallengeTask">
+        update at_challenge_tasks
+        <set>
+            <if test="taskName != null and taskName != ''">task_name = #{taskName},</if>
+            <if test="taskDescription != null">task_description = #{taskDescription},</if>
+            <if test="taskIndex != null">task_index = #{taskIndex},</if>
+            <if test="category != null and category != ''">category = #{category},</if>
+            <if test="createdBy != null">created_by = #{createdBy},</if>
+            <if test="iconUrl != null">icon_url = #{iconUrl},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+            updated_at = #{updatedAt},
+        </set>
+        where id = #{id}
+    </update>
+    
+    <delete id="deleteChallengeTaskById" parameterType="Long">
+        delete from at_challenge_tasks where id = #{id}
+    </delete>
+    
+    <delete id="deleteChallengeTaskByIds" parameterType="Long">
+        delete from at_challenge_tasks where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
