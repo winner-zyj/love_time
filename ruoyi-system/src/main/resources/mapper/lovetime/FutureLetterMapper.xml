@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.FutureLetterMapper">
+    
+    <resultMap type="FutureLetter" id="FutureLetterResult">
+        <result property="id" column="id"/>
+        <result property="senderId" column="sender_id"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="deliveryMethod" column="delivery_method"/>
+        <result property="scheduledDate" column="scheduled_date"/>
+        <result property="scheduledTime" column="scheduled_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="status" column="status"/>
+        <result property="sentAt" column="sent_at"/>
+        <result property="readAt" column="read_at"/>
+        <result property="backgroundImage" column="background_image"/>
+        <result property="backgroundOpacity" column="background_opacity"/>
+        <result property="backgroundWidth" column="background_width"/>
+        <result property="backgroundHeight" column="background_height"/>
+        <result property="fontStyle" column="font_style"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="deletedAt" column="deleted_at"/>
+    </resultMap>
+    
+    <sql id="selectFutureLetterVo">
+        select id, sender_id, receiver_id, title, content, delivery_method, scheduled_date, scheduled_time, created_at, updated_at, status, sent_at, read_at, background_image, background_opacity, background_width, background_height, font_style, is_deleted, deleted_at from at_future_letter
+    </sql>
+    
+    <select id="selectFutureLetterList" parameterType="FutureLetter" resultMap="FutureLetterResult">
+        <include refid="selectFutureLetterVo"/>
+        <where>
+            <if test="senderId != null"> and sender_id = #{senderId}</if>
+            <if test="receiverId != null"> and receiver_id = #{receiverId}</if>
+            <if test="title != null and title != ''"> and title like concat('%', #{title}, '%')</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+            <if test="isDeleted != null"> and is_deleted = #{isDeleted}</if>
+        </where>
+        order by created_at desc
+    </select>
+    
+    <select id="selectFutureLettersBySenderId" parameterType="map" resultMap="FutureLetterResult">
+        <include refid="selectFutureLetterVo"/>
+        where sender_id = #{senderId}
+        <if test="status != null and status != ''"> and status = #{status}</if>
+        and is_deleted = 0
+        order by created_at desc
+    </select>
+    
+    <select id="selectFutureLettersByReceiverId" parameterType="map" resultMap="FutureLetterResult">
+        <include refid="selectFutureLetterVo"/>
+        where receiver_id = #{receiverId}
+        <if test="status != null and status != ''"> and status = #{status}</if>
+        and is_deleted = 0
+        order by created_at desc
+    </select>
+    
+    <select id="selectFutureLetterById" parameterType="Long" resultMap="FutureLetterResult">
+        <include refid="selectFutureLetterVo"/>
+        where id = #{id} and is_deleted = 0
+    </select>
+    
+    <insert id="insertFutureLetter" parameterType="FutureLetter" useGeneratedKeys="true" keyProperty="id">
+        insert into at_future_letter
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="senderId != null">sender_id,</if>
+            <if test="receiverId != null">receiver_id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="content != null and content != ''">content,</if>
+            <if test="deliveryMethod != null and deliveryMethod != ''">delivery_method,</if>
+            <if test="scheduledDate != null">scheduled_date,</if>
+            <if test="scheduledTime != null">scheduled_time,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="sentAt != null">sent_at,</if>
+            <if test="readAt != null">read_at,</if>
+            <if test="backgroundImage != null">background_image,</if>
+            <if test="backgroundOpacity != null">background_opacity,</if>
+            <if test="backgroundWidth != null">background_width,</if>
+            <if test="backgroundHeight != null">background_height,</if>
+            <if test="fontStyle != null">font_style,</if>
+            <if test="isDeleted != null">is_deleted,</if>
+            <if test="deletedAt != null">deleted_at,</if>
+            created_at,
+            updated_at,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="senderId != null">#{senderId},</if>
+            <if test="receiverId != null">#{receiverId},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="content != null and content != ''">#{content},</if>
+            <if test="deliveryMethod != null and deliveryMethod != ''">#{deliveryMethod},</if>
+            <if test="scheduledDate != null">#{scheduledDate},</if>
+            <if test="scheduledTime != null">#{scheduledTime},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="sentAt != null">#{sentAt},</if>
+            <if test="readAt != null">#{readAt},</if>
+            <if test="backgroundImage != null">#{backgroundImage},</if>
+            <if test="backgroundOpacity != null">#{backgroundOpacity},</if>
+            <if test="backgroundWidth != null">#{backgroundWidth},</if>
+            <if test="backgroundHeight != null">#{backgroundHeight},</if>
+            <if test="fontStyle != null">#{fontStyle},</if>
+            <if test="isDeleted != null">#{isDeleted},</if>
+            <if test="deletedAt != null">#{deletedAt},</if>
+            now(),
+            now(),
+        </trim>
+    </insert>
+    
+    <update id="updateFutureLetter" parameterType="FutureLetter">
+        update at_future_letter
+        <set>
+            <if test="senderId != null">sender_id = #{senderId},</if>
+            <if test="receiverId != null">receiver_id = #{receiverId},</if>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="deliveryMethod != null and deliveryMethod != ''">delivery_method = #{deliveryMethod},</if>
+            <if test="scheduledDate != null">scheduled_date = #{scheduledDate},</if>
+            <if test="scheduledTime != null">scheduled_time = #{scheduledTime},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="sentAt != null">sent_at = #{sentAt},</if>
+            <if test="readAt != null">read_at = #{readAt},</if>
+            <if test="backgroundImage != null">background_image = #{backgroundImage},</if>
+            <if test="backgroundOpacity != null">background_opacity = #{backgroundOpacity},</if>
+            <if test="backgroundWidth != null">background_width = #{backgroundWidth},</if>
+            <if test="backgroundHeight != null">background_height = #{backgroundHeight},</if>
+            <if test="fontStyle != null">font_style = #{fontStyle},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="deletedAt != null">deleted_at = #{deletedAt},</if>
+            updated_at = now(),
+        </set>
+        where id = #{id}
+    </update>
+    
+    <delete id="deleteFutureLetterById" parameterType="Long">
+        delete from at_future_letter where id = #{id}
+    </delete>
+    
+    <delete id="deleteFutureLetterByIds" parameterType="Long">
+        delete from at_future_letter where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

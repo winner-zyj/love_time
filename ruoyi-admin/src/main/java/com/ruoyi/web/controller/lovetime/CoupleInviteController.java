@@ -20,6 +20,8 @@ import com.ruoyi.lovetime.service.IUserService;
 import com.ruoyi.lovetime.service.ICoupleRelationshipService;
 import javax.servlet.http.HttpServletRequest;
 
+import java.util.Calendar;
+
 /**
  * 情侣邀请码Controller
  * 
@@ -439,8 +441,35 @@ public class CoupleInviteController {
                 return AjaxResult.error("无法获取关系开始时间");
             }
             
-            long diffInMillies = Math.abs(new java.util.Date().getTime() - startDate.getTime());
-            long loveDays = java.util.concurrent.TimeUnit.DAYS.convert(diffInMillies, java.util.concurrent.TimeUnit.MILLISECONDS);
+            // 按自然日计算相爱天数
+            // 第一天就是绑定关系的当天，所以初始值为1
+            long loveDays = 1;
+            
+            // 如果当前日期晚于开始日期，则计算相差的天数
+            java.util.Date currentDate = new java.util.Date();
+            if (currentDate.after(startDate)) {
+                // 使用Calendar对象比较日期
+                Calendar startCal = Calendar.getInstance();
+                startCal.setTime(startDate);
+                Calendar currentCal = Calendar.getInstance();
+                currentCal.setTime(currentDate);
+                
+                // 重置时间为当天0点，只比较日期
+                startCal.set(Calendar.HOUR_OF_DAY, 0);
+                startCal.set(Calendar.MINUTE, 0);
+                startCal.set(Calendar.SECOND, 0);
+                startCal.set(Calendar.MILLISECOND, 0);
+                
+                currentCal.set(Calendar.HOUR_OF_DAY, 0);
+                currentCal.set(Calendar.MINUTE, 0);
+                currentCal.set(Calendar.SECOND, 0);
+                currentCal.set(Calendar.MILLISECOND, 0);
+                
+                // 计算相差的天数
+                long diffInMillis = currentCal.getTimeInMillis() - startCal.getTimeInMillis();
+                long diffDays = diffInMillis / (24 * 60 * 60 * 1000);
+                loveDays += diffDays;
+            }
             
             java.util.Map<String, Object> result = new java.util.HashMap<>();
             result.put("loveDays", loveDays);

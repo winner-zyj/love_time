@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.TrajectoryMapper">
+    
+    <resultMap type="Trajectory" id="TrajectoryResult">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>
+        <result property="visitTime" column="visit_time"/>
+        <result property="address" column="address"/>
+        <result property="placeName" column="place_name"/>
+        <result property="description" column="description"/>
+        <result property="photoUrl" column="photo_url"/>
+        <result property="isShared" column="is_shared"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    
+    <sql id="selectTrajectoryVo">
+        select id, user_id, latitude, longitude, visit_time, address, place_name, description, photo_url, is_shared, created_at, updated_at from at_trajectories
+    </sql>
+    
+    <select id="selectTrajectoryList" parameterType="Trajectory" resultMap="TrajectoryResult">
+        <include refid="selectTrajectoryVo"/>
+        <where>
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="latitude != null"> and latitude = #{latitude}</if>
+            <if test="longitude != null"> and longitude = #{longitude}</if>
+            <if test="address != null and address != ''"> and address like concat('%', #{address}, '%')</if>
+            <if test="placeName != null and placeName != ''"> and place_name like concat('%', #{placeName}, '%')</if>
+            <if test="isShared != null"> and is_shared = #{isShared}</if>
+        </where>
+        order by visit_time desc
+    </select>
+    
+    <select id="selectTrajectoryByUserId" parameterType="Long" resultMap="TrajectoryResult">
+        <include refid="selectTrajectoryVo"/>
+        where user_id = #{userId}
+        order by visit_time desc
+    </select>
+    
+    <select id="selectTrajectoryByUserIdAndDateRange" parameterType="map" resultMap="TrajectoryResult">
+        <include refid="selectTrajectoryVo"/>
+        where user_id = #{userId}
+        and visit_time between #{startDate} and #{endDate}
+        order by visit_time desc
+    </select>
+    
+    <select id="selectTrajectoryById" parameterType="Long" resultMap="TrajectoryResult">
+        <include refid="selectTrajectoryVo"/>
+        where id = #{id}
+    </select>
+    
+    <select id="selectLatestTrajectoryByUserId" parameterType="Long" resultMap="TrajectoryResult">
+        <include refid="selectTrajectoryVo"/>
+        where user_id = #{userId}
+        order by visit_time desc
+        limit 1
+    </select>
+    
+    <insert id="insertTrajectory" parameterType="Trajectory" useGeneratedKeys="true" keyProperty="id">
+        insert into at_trajectories
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="latitude != null">latitude,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="visitTime != null">visit_time,</if>
+            <if test="address != null">address,</if>
+            <if test="placeName != null">place_name,</if>
+            <if test="description != null">description,</if>
+            <if test="photoUrl != null">photo_url,</if>
+            <if test="isShared != null">is_shared,</if>
+            created_at,
+            updated_at,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="latitude != null">#{latitude},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="visitTime != null">#{visitTime},</if>
+            <if test="address != null">#{address},</if>
+            <if test="placeName != null">#{placeName},</if>
+            <if test="description != null">#{description},</if>
+            <if test="photoUrl != null">#{photoUrl},</if>
+            <if test="isShared != null">#{isShared},</if>
+            now(),
+            now(),
+        </trim>
+    </insert>
+    
+    <update id="updateTrajectory" parameterType="Trajectory">
+        update at_trajectories
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="visitTime != null">visit_time = #{visitTime},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="placeName != null">place_name = #{placeName},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="photoUrl != null">photo_url = #{photoUrl},</if>
+            <if test="isShared != null">is_shared = #{isShared},</if>
+            updated_at = now(),
+        </set>
+        where id = #{id}
+    </update>
+    
+    <delete id="deleteTrajectoryById" parameterType="Long">
+        delete from at_trajectories where id = #{id}
+    </delete>
+    
+    <delete id="deleteTrajectoryByIds" parameterType="Long">
+        delete from at_trajectories where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
