@@ -464,21 +464,36 @@ public class FutureLetterController {
     public AjaxResult getFonts() {
         try {
             // 构造字体列表
-            Map<String, String> handwriting = new HashMap<>();
-            handwriting.put("key", "handwriting");
-            handwriting.put("name", "手写体");
+            List<Map<String, String>> fonts = Arrays.asList(
+                createFontMap("default", "默认字体", "清晰易读", "未来与你"),
+                createFontMap("mashanzheng", "马善政手写", "温柔手写感", "未来与你"),
+                createFontMap("zcoolkuaile", "站酷快乐体", "活泼可爱", "未来与你"),
+                createFontMap("qingsong", "清松手写体", "自然流畅", "未来与你"),
+                createFontMap("zcoolxiaowei", "站酷小薇体", "清新文艺", "未来与你"),
+                createFontMap("zcoolwenyi", "站酷文艺体", "优雅文艺", "未来与你")
+            );
             
-            Map<String, String> typewriter = new HashMap<>();
-            typewriter.put("key", "typewriter");
-            typewriter.put("name", "打字机");
-            
-            Map<String, String> defaultFont = new HashMap<>();
-            defaultFont.put("key", "default");
-            defaultFont.put("name", "默认字体");
-            
-            return AjaxResult.success(Arrays.asList(handwriting, typewriter, defaultFont));
+            return AjaxResult.success(fonts);
         } catch (Exception e) {
             return AjaxResult.error("获取字体列表失败: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 创建字体信息映射
+     * 
+     * @param value 字体值
+     * @param label 字体标签
+     * @param description 字体描述
+     * @param sample 字体样例
+     * @return 字体信息映射
+     */
+    private Map<String, String> createFontMap(String value, String label, String description, String sample) {
+        Map<String, String> fontMap = new HashMap<>();
+        fontMap.put("value", value);
+        fontMap.put("label", label);
+        fontMap.put("description", description);
+        fontMap.put("sample", sample);
+        return fontMap;
     }
 }
