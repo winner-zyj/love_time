@@ -58,8 +58,8 @@ public class WechatLoginController {
             
             // 记录请求参数
             log.info("微信登录请求参数: nickName={}, avatarUrl={}", loginRequest.getNickName(), loginRequest.getAvatarUrl());
-            
-            // 1. 调用微信接口，通过code获取openid和session_key
+            System.out.println("aaaa"+loginRequest);
+            // 调用微信接口，通过code获取openid和session_key
             long startTime = System.currentTimeMillis();
             Map<String, String> wechatResult = WeChatUtil.getOpenIdAndSessionKey(appId, secret, loginRequest.getCode());
             long endTime = System.currentTimeMillis();

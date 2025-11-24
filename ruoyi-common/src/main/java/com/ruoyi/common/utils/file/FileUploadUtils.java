@@ -170,9 +170,36 @@ public class FileUploadUtils
 
     public static final String getPathFileName(String uploadDir, String fileName) throws IOException
     {
-        int dirLastIndex = RuoYiConfig.getProfile().length() + 1;
-        String currentDir = StringUtils.substring(uploadDir, dirLastIndex);
-        return Constants.RESOURCE_PREFIX + "/" + currentDir + "/" + fileName;
+        String profilePath = RuoYiConfig.getProfile();
+        String currentDir = "";
+        
+        // 如果uploadDir以profilePath开头，则截取相对路径
+        if (uploadDir.startsWith(profilePath)) {
+            int dirLastIndex = profilePath.length();
+            if (uploadDir.length() > dirLastIndex) {
+                // 确保路径分隔符正确处理
+                if (uploadDir.charAt(dirLastIndex) == '/' || uploadDir.charAt(dirLastIndex) == '\\') {
+                    dirLastIndex++;
+                }
+                currentDir = StringUtils.substring(uploadDir, dirLastIndex);
+            }
+        } else {
+            // 如果不以profilePath开头，直接使用uploadDir
+            currentDir = uploadDir;
+        }
+        
+        // 确保路径分隔符统一
+        if (StringUtils.isNotEmpty(currentDir)) {
+            currentDir = currentDir.replace("\\", "/");
+            if (!currentDir.endsWith("/")) {
+                currentDir += "/";
+            }
+        }
+        
+        // 确保fileName路径分隔符统一
+        String normalizedFileName = fileName.replace("\\", "/");
+        
+        return Constants.RESOURCE_PREFIX + "/" + currentDir + normalizedFileName;
     }
 
     /**

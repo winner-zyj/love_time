@@ -1,0 +1,4 @@
+# 开发环境微信配置
+wechat:
+  appid: wx99ff5431b615a046
+  secret: your_actual_secret_here
