@@ -199,7 +199,8 @@ public class FileUploadUtils
         // 确保fileName路径分隔符统一
         String normalizedFileName = fileName.replace("\\", "/");
         
-        return Constants.RESOURCE_PREFIX + "/" + currentDir + normalizedFileName;
+        // 返回相对路径，不包含Constants.RESOURCE_PREFIX
+        return currentDir + normalizedFileName;
     }
 
     /**

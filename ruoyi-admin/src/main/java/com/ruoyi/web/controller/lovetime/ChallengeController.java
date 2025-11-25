@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,6 +36,10 @@ import com.ruoyi.common.core.domain.lovetime.ChallengeTask;
 import com.ruoyi.common.core.domain.lovetime.ChallengeRecord;
 import com.ruoyi.common.core.domain.lovetime.ChallengeProgress;
 import com.ruoyi.common.core.domain.lovetime.CoupleRelationship;
+import com.ruoyi.common.core.domain.lovetime.AddTaskRequest;
+import com.ruoyi.common.core.domain.lovetime.DeleteTaskRequest;
+import com.ruoyi.common.core.domain.lovetime.CompleteTaskRequest;
+import com.ruoyi.common.core.domain.lovetime.FavoriteTaskRequest;
 import com.ruoyi.common.config.RuoYiConfig;
 import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.common.exception.file.FileSizeLimitExceededException;
@@ -269,15 +274,15 @@ public class ChallengeController {
     }
     
     /**
-     * 上传完成照片
+     * 上传挑战任务照片
      */
     @PostMapping("/upload")
-    public AjaxResult uploadPhoto(MultipartFile file, HttpServletRequest request) {
+    public AjaxResult uploadPhoto(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         try {
             // 获取当前登录用户
             LoginUser loginUser = tokenService.getLoginUser(request);
             if (loginUser == null) {
-                return AjaxResult.error("未提供认证信息");
+                return AjaxResult.error("用户未登录");
             }
 
             // 验证文件是否为空
@@ -297,17 +302,15 @@ public class ChallengeController {
             // 上传文件路径 - 使用挑战任务专用路径
             String filePath = RuoYiConfig.getProfile() + "/uploads/challenge";
 
-            // 上传并返回新文件名称
+            // 使用若依框架的文件上传工具上传文件
             String fileName = FileUploadUtils.upload(filePath, file, allowedExtension, true);
 
-            // 生成可访问的图片URL
-            String photoUrl = serverConfig.getUrl() + fileName;
-
-            // 构造返回数据
-            Map<String, Object> result = new HashMap<>();
-            result.put("photoUrl", photoUrl);
-
-            return AjaxResult.success("照片上传成功", result);
+            // 构造返回数据 - 返回完整的URL路径
+            String fullImageUrl = buildFullImageUrl(request, fileName);
+            AjaxResult ajax = AjaxResult.success("照片上传成功");
+            ajax.put("photoUrl", fullImageUrl);
+            
+            return ajax;
         } catch (FileSizeLimitExceededException e) {
             logger.error("文件大小超过限制", e);
             return AjaxResult.error("文件大小不能超过5MB");
@@ -319,49 +322,67 @@ public class ChallengeController {
             return AjaxResult.error("服务器内部错误，请稍后重试");
         }
     }
+
+    private String buildFullImageUrl(HttpServletRequest request, String fileName) {
+        // 1. 获取协议（http/https）
+        String scheme = request.getScheme();
+        // 2. 获取域名或 IP（如 "smallpeppers.cn" 或 "192.168.1.100"）
+        String serverName = request.getServerName();
+        // 3. 获取端口（如 80、443、8886）
+        int serverPort = request.getServerPort();
+        // 4. 获取项目上下文路径（若依项目默认部署在根目录，此值为空）
+        String contextPath = request.getContextPath();
+
+        // 5. 拼接 URL（格式：协议://域名:端口/上下文路径/图片相对路径）
+        StringBuilder url = new StringBuilder();
+        url.append(scheme).append("://").append(serverName);
+        // 只有非默认端口（80 或 443）才需要拼接端口号
+        if ((scheme.equals("http") && serverPort != 80) || (scheme.equals("https") && serverPort != 443)) {
+            url.append(":").append(serverPort);
+        }
+        url.append(contextPath)
+                .append("/profile/") // 与上传目录对应（若依默认/profile是静态资源前缀）
+                .append(fileName);
+
+        return url.toString();
+    }
     
     /**
-     * 测试文件上传接口
+     * 收藏 / 取消收藏任务
      */
-    @PostMapping("/test-upload")
-    public AjaxResult testUpload(MultipartFile file) {
+    @PostMapping("/favorite")
+    public AjaxResult favoriteTask(@RequestBody FavoriteTaskRequest request, HttpServletRequest httpServletRequest) {
         try {
-            if (file == null || file.isEmpty()) {
-                return AjaxResult.error("请选择要上传的文件");
+            // 获取当前登录用户
+            LoginUser loginUser = tokenService.getLoginUser(httpServletRequest);
+            if (loginUser == null) {
+                return AjaxResult.error("用户未登录");
             }
             
-            logger.info("接收到文件: {}", file.getOriginalFilename());
-            logger.info("文件大小: {} bytes", file.getSize());
+            // 验证任务ID
+            if (request.getTaskId() == null) {
+                return AjaxResult.error("任务ID不能为空");
+            }
             
-            // 定义允许的图片格式
-            String[] allowedExtension = { "jpg", "jpeg", "png" };
+            // 验证favorited参数
+            if (request.getFavorited() == null) {
+                return AjaxResult.error("favorited参数不能为空");
+            }
             
-            // 上传文件路径 - 使用挑战任务专用路径
-            String filePath = RuoYiConfig.getProfile() + "/uploads/challenge";
-            
-            logger.info("上传路径: {}", filePath);
-            
-            // 上传并返回新文件名称
-            String fileName = FileUploadUtils.upload(filePath, file, allowedExtension, true);
-            
-            logger.info("上传后的文件名: {}", fileName);
-            
-            // 生成可访问的图片URL
-            String photoUrl = serverConfig.getUrl() + fileName;
-            
-            logger.info("生成的URL: {}", photoUrl);
+            // 收藏/取消收藏任务
+            ChallengeRecord record = challengeRecordService.favoriteTask(
+                loginUser.getUserId(), 
+                request.getTaskId(), 
+                request.getFavorited());
             
             // 构造返回数据
             Map<String, Object> result = new HashMap<>();
-            result.put("photoUrl", photoUrl);
-            result.put("fileName", fileName);
-            result.put("originalName", file.getOriginalFilename());
-            result.put("size", file.getSize());
+            result.put("taskId", record.getTaskId());
+            result.put("favorited", record.getIsFavorited());
             
-            return AjaxResult.success("照片上传成功", result);
+            return AjaxResult.success("操作成功", result);
         } catch (Exception e) {
-            logger.error("上传文件时发生异常", e);
-            return AjaxResult.error("上传失败: " + e.getMessage());
+            return AjaxResult.error("操作失败: " + e.getMessage());
         }
     }
     
@@ -379,8 +400,8 @@ public class ChallengeController {
             // 提取文件路径部分
             String filePathPart = requestURI.substring(requestURI.indexOf(apiPath) + apiPath.length());
             
-            // 构建完整文件路径
-            String fullPath = RuoYiConfig.getProfile() + "/uploads/challenge/" + filePathPart;
+            // 构建完整文件路径 - 使用您实际的文件存储路径
+            String fullPath = "D:/ruoyi/uploadPath/uploads/challenge/" + filePathPart;
             File file = new File(fullPath);
             
             // 检查文件是否存在
@@ -428,150 +449,6 @@ public class ChallengeController {
         } catch (Exception e) {
             logger.error("获取图片时发生异常", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * 收藏 / 取消收藏任务
-     */
-    @PostMapping("/favorite")
-    public AjaxResult favoriteTask(@RequestBody FavoriteTaskRequest request, HttpServletRequest httpServletRequest) {
-        try {
-            // 获取当前登录用户
-            LoginUser loginUser = tokenService.getLoginUser(httpServletRequest);
-            if (loginUser == null) {
-                return AjaxResult.error("用户未登录");
-            }
-            
-            // 验证任务ID
-            if (request.getTaskId() == null) {
-                return AjaxResult.error("任务ID不能为空");
-            }
-            
-            // 验证favorited参数
-            if (request.getFavorited() == null) {
-                return AjaxResult.error("favorited参数不能为空");
-            }
-            
-            // 收藏/取消收藏任务
-            ChallengeRecord record = challengeRecordService.favoriteTask(
-                loginUser.getUserId(), 
-                request.getTaskId(), 
-                request.getFavorited());
-            
-            // 构造返回数据
-            Map<String, Object> result = new HashMap<>();
-            result.put("taskId", record.getTaskId());
-            result.put("isFavorited", record.getIsFavorited());
-            
-            return AjaxResult.success("操作成功", result);
-        } catch (Exception e) {
-            return AjaxResult.error("操作失败: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * 添加任务请求类
-     */
-    public static class AddTaskRequest {
-        private String taskName;
-        private String taskDescription;
-        
-        public String getTaskName() {
-            return taskName;
-        }
-        
-        public void setTaskName(String taskName) {
-            this.taskName = taskName;
-        }
-        
-        public String getTaskDescription() {
-            return taskDescription;
-        }
-        
-        public void setTaskDescription(String taskDescription) {
-            this.taskDescription = taskDescription;
-        }
-    }
-    
-    /**
-     * 删除任务请求类
-     */
-    public static class DeleteTaskRequest {
-        private Long taskId;
-        
-        public Long getTaskId() {
-            return taskId;
-        }
-        
-        public void setTaskId(Long taskId) {
-            this.taskId = taskId;
-        }
-    }
-    
-    /**
-     * 完成任务请求类
-     */
-    public static class CompleteTaskRequest {
-        private Long taskId;
-        private Boolean completed;
-        private String photoUrl;
-        private String note;
-        
-        public Long getTaskId() {
-            return taskId;
-        }
-        
-        public void setTaskId(Long taskId) {
-            this.taskId = taskId;
-        }
-        
-        public Boolean getCompleted() {
-            return completed;
-        }
-        
-        public void setCompleted(Boolean completed) {
-            this.completed = completed;
-        }
-        
-        public String getPhotoUrl() {
-            return photoUrl;
-        }
-        
-        public void setPhotoUrl(String photoUrl) {
-            this.photoUrl = photoUrl;
-        }
-        
-        public String getNote() {
-            return note;
-        }
-        
-        public void setNote(String note) {
-            this.note = note;
-        }
-    }
-    
-    /**
-     * 收藏任务请求类
-     */
-    public static class FavoriteTaskRequest {
-        private Long taskId;
-        private Boolean favorited;
-        
-        public Long getTaskId() {
-            return taskId;
-        }
-        
-        public void setTaskId(Long taskId) {
-            this.taskId = taskId;
-        }
-        
-        public Boolean getFavorited() {
-            return favorited;
-        }
-        
-        public void setFavorited(Boolean favorited) {
-            this.favorited = favorited;
         }
     }
 }

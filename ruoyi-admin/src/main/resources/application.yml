@@ -7,6 +7,7 @@ ruoyi:
   # 版权年份
   copyrightYear: 2025
   # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
+  #profile: /usr/local/lovetime/upload
   profile: D:/ruoyi/uploadPath
   # 获取ip地址开关
   addressEnabled: false
