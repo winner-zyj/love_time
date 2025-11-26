@@ -1,5 +1,6 @@
 package com.ruoyi.web.controller.lovetime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,13 +93,44 @@ public class ChallengeController {
             List<ChallengeTask> tasks = challengeTaskService.selectAllChallengeTasks(loginUser.getUserId());
             
             // 为每个任务添加用户记录信息
+            List<Map<String, Object>> taskWithRecords = new ArrayList<>();
             for (ChallengeTask task : tasks) {
+                Map<String, Object> taskInfo = new HashMap<>();
+                taskInfo.put("id", task.getId());
+                taskInfo.put("taskName", task.getTaskName());
+                taskInfo.put("taskDescription", task.getTaskDescription());
+                taskInfo.put("taskIndex", task.getTaskIndex());
+                taskInfo.put("category", task.getCategory());
+                taskInfo.put("createdBy", task.getCreatedBy());
+                taskInfo.put("iconUrl", task.getIconUrl());
+                taskInfo.put("isActive", task.getIsActive());
+                taskInfo.put("createdAt", task.getCreatedAt());
+                taskInfo.put("updatedAt", task.getUpdatedAt());
+                
+                // 获取用户对该任务的记录
                 ChallengeRecord record = challengeRecordService.selectChallengeRecordByUserAndTask(
                     loginUser.getUserId(), task.getId());
-                // 这里可以将record信息添加到task中，如果需要的话
+                
+                if (record != null) {
+                    Map<String, Object> recordInfo = new HashMap<>();
+                    recordInfo.put("status", record.getStatus());
+                    // 将相对路径转换为完整URL
+                    recordInfo.put("photoUrl", record.getPhotoUrl() != null ? 
+                        buildFullImageUrl(request, record.getPhotoUrl()) : null);
+                    recordInfo.put("note", record.getNote());
+                    recordInfo.put("isFavorited", record.getIsFavorited());
+                    recordInfo.put("completedAt", record.getCompletedAt());
+                    recordInfo.put("createdAt", record.getCreatedAt());
+                    recordInfo.put("updatedAt", record.getUpdatedAt());
+                    taskInfo.put("record", recordInfo);
+                } else {
+                    taskInfo.put("record", null);
+                }
+                
+                taskWithRecords.add(taskInfo);
             }
             
-            return AjaxResult.success(tasks);
+            return AjaxResult.success(taskWithRecords);
         } catch (Exception e) {
             return AjaxResult.error("获取任务列表失败: " + e.getMessage());
         }
@@ -251,19 +283,28 @@ public class ChallengeController {
                 return AjaxResult.error("备注长度不能超过500个字符");
             }
             
+            // 处理照片URL，将完整URL转换为相对路径存储
+            String photoUrl = request.getPhotoUrl();
+            String relativePhotoUrl = photoUrl;
+            if (photoUrl != null && !photoUrl.isEmpty()) {
+                // 提取相对路径部分
+                relativePhotoUrl = extractRelativePathFromUrl(photoUrl);
+            }
+            
             // 标记任务完成/取消
             ChallengeRecord record = challengeRecordService.completeTask(
                 loginUser.getUserId(), 
                 request.getTaskId(), 
                 request.getCompleted(), 
-                request.getPhotoUrl(), 
+                relativePhotoUrl, 
                 request.getNote());
             
-            // 构造返回数据
+            // 构造返回数据，将相对路径转换为完整URL
             Map<String, Object> result = new HashMap<>();
             result.put("taskId", record.getTaskId());
             result.put("status", record.getStatus());
-            result.put("photoUrl", record.getPhotoUrl());
+            result.put("photoUrl", record.getPhotoUrl() != null ? 
+                buildFullImageUrl(httpServletRequest, record.getPhotoUrl()) : null);
             result.put("note", record.getNote());
             result.put("completedAt", record.getCompletedAt());
             
@@ -271,6 +312,28 @@ public class ChallengeController {
         } catch (Exception e) {
             return AjaxResult.error("操作失败: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 从完整URL中提取相对路径
+     * 
+     * @param fullUrl 完整URL
+     * @return 相对路径
+     */
+    private String extractRelativePathFromUrl(String fullUrl) {
+        if (fullUrl == null || fullUrl.isEmpty()) {
+            return fullUrl;
+        }
+        
+        // 查找/profile/的位置
+        int profileIndex = fullUrl.indexOf("/profile/");
+        if (profileIndex != -1) {
+            // 提取/profile/后面的部分作为相对路径
+            return fullUrl.substring(profileIndex + "/profile/".length());
+        }
+        
+        // 如果没有找到/profile/，则返回原URL
+        return fullUrl;
     }
     
     /**
@@ -323,6 +386,13 @@ public class ChallengeController {
         }
     }
 
+    /**
+     * 构建完整的图片URL
+     * 
+     * @param request HTTP请求
+     * @param fileName 文件名（相对路径）
+     * @return 完整的图片访问URL
+     */
     private String buildFullImageUrl(HttpServletRequest request, String fileName) {
         // 1. 获取协议（http/https）
         String scheme = request.getScheme();
@@ -383,72 +453,6 @@ public class ChallengeController {
             return AjaxResult.success("操作成功", result);
         } catch (Exception e) {
             return AjaxResult.error("操作失败: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * 获取挑战任务照片
-     */
-    @GetMapping("/photo/**")
-    public void getChallengePhoto(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            // 从请求URL中提取文件路径
-            String requestURI = request.getRequestURI();
-            String contextPath = request.getContextPath();
-            String apiPath = "/api/challenge/photo/";
-            
-            // 提取文件路径部分
-            String filePathPart = requestURI.substring(requestURI.indexOf(apiPath) + apiPath.length());
-            
-            // 构建完整文件路径 - 使用您实际的文件存储路径
-            String fullPath = "D:/ruoyi/uploadPath/uploads/challenge/" + filePathPart;
-            File file = new File(fullPath);
-            
-            // 检查文件是否存在
-            if (!file.exists()) {
-                logger.warn("请求的文件不存在: {}", fullPath);
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-            
-            // 检查是否为文件（而不是目录）
-            if (!file.isFile()) {
-                logger.warn("请求的路径不是文件: {}", fullPath);
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-            
-            // 设置响应头
-            String mimeType = Files.probeContentType(file.toPath());
-            if (mimeType == null) {
-                // 根据文件扩展名确定MIME类型
-                String fileName = file.getName().toLowerCase();
-                if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-                    mimeType = "image/jpeg";
-                } else if (fileName.endsWith(".png")) {
-                    mimeType = "image/png";
-                } else {
-                    mimeType = "application/octet-stream";
-                }
-            }
-            
-            response.setContentType(mimeType);
-            response.setContentLength((int) file.length());
-            response.setHeader("Content-Disposition", "inline; filename=\"" + file.getName() + "\"");
-            
-            // 写入文件内容到响应
-            try (InputStream inputStream = new FileInputStream(file);
-                 OutputStream outputStream = response.getOutputStream()) {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-                outputStream.flush();
-            }
-        } catch (Exception e) {
-            logger.error("获取图片时发生异常", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 }

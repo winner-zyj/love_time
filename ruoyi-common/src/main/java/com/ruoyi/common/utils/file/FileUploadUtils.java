@@ -191,16 +191,19 @@ public class FileUploadUtils
         // 确保路径分隔符统一
         if (StringUtils.isNotEmpty(currentDir)) {
             currentDir = currentDir.replace("\\", "/");
-            if (!currentDir.endsWith("/")) {
-                currentDir += "/";
-            }
+            // 不再添加尾部斜杠，避免路径重复
         }
         
         // 确保fileName路径分隔符统一
         String normalizedFileName = fileName.replace("\\", "/");
         
         // 返回相对路径，不包含Constants.RESOURCE_PREFIX
-        return currentDir + normalizedFileName;
+        // 如果currentDir不为空，则添加分隔符
+        if (StringUtils.isNotEmpty(currentDir)) {
+            return currentDir + "/" + normalizedFileName;
+        } else {
+            return normalizedFileName;
+        }
     }
 
     /**
