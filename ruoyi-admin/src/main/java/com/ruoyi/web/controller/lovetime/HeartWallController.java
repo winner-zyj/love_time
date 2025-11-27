@@ -20,8 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.ruoyi.common.annotation.Anonymous;
+import com.ruoyi.common.config.RuoYiConfig;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.model.LoginUser;
+import com.ruoyi.common.exception.file.FileSizeLimitExceededException;
+import com.ruoyi.common.exception.file.InvalidExtensionException;
+import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.framework.web.service.TokenService;
 import com.ruoyi.lovetime.service.IHeartWallProjectService;
 import com.ruoyi.lovetime.service.IHeartWallPhotoService;
@@ -38,6 +42,7 @@ import com.ruoyi.common.core.domain.lovetime.CoupleRelationship;
  */
 @RestController
 @RequestMapping("/api/heart-wall")
+// 确保Controller能够处理multipart请求
 public class HeartWallController {
     
     @Autowired
@@ -258,94 +263,97 @@ public class HeartWallController {
     /**
      * 上传照片（方式一：前端已有图片 URL）
      */
-    @PostMapping("/photos")
-    public AjaxResult uploadPhoto(@RequestBody UploadPhotoRequest request, HttpServletRequest httpServletRequest) {
-        try {
-            // 获取当前登录用户
-            LoginUser loginUser = tokenService.getLoginUser(httpServletRequest);
-            if (loginUser == null) {
-                return AjaxResult.error("用户未登录");
-            }
-            
-            // 验证项目ID
-            if (request.getProjectId() == null) {
-                return AjaxResult.error("项目ID不能为空");
-            }
-            
-            // 验证照片URL
-            if (request.getPhotoUrl() == null || request.getPhotoUrl().trim().isEmpty()) {
-                return AjaxResult.error("照片URL不能为空");
-            }
-            
-            // 验证位置索引
-            if (request.getPositionIndex() == null) {
-                return AjaxResult.error("位置索引不能为空");
-            }
-            
-            // 查询项目
-            HeartWallProject project = heartWallProjectService.selectHeartWallProjectById(request.getProjectId());
-            if (project == null) {
-                return AjaxResult.error("项目不存在");
-            }
-            
-            // 验证用户权限（只能在自己的项目中上传照片）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
-                return AjaxResult.error("无权限在该项目中上传照片");
-            }
-            
-            // 验证位置索引是否超出范围
-            if (request.getPositionIndex() < 1 || request.getPositionIndex() > project.getMaxPhotos()) {
-                return AjaxResult.error("位置索引超出范围");
-            }
-            
-            // 检查该位置是否已有照片
-            HeartWallPhoto existingPhoto = heartWallPhotoService.selectHeartWallPhotoByProjectAndPosition(
-                request.getProjectId(), request.getPositionIndex());
-            if (existingPhoto != null) {
-                return AjaxResult.error("该位置已存在照片，请先删除原有照片");
-            }
-            
-            // 创建照片记录
-            HeartWallPhoto photo = new HeartWallPhoto();
-            photo.setProjectId(request.getProjectId());
-            photo.setUserId(loginUser.getUserId());
-            photo.setPhotoUrl(request.getPhotoUrl().trim());
-            photo.setThumbnailUrl(request.getThumbnailUrl() != null ? request.getThumbnailUrl().trim() : null);
-            photo.setPositionIndex(request.getPositionIndex());
-            photo.setCaption(request.getCaption() != null ? request.getCaption().trim() : null);
-            photo.setTakenDate(request.getTakenDate());
-            photo.setUploadedAt(new Date());
-            photo.setUpdatedAt(new Date());
-            
-            // 保存照片
-            heartWallPhotoService.insertHeartWallPhoto(photo);
-            
-            // 更新项目照片数量
-            project.setPhotoCount(project.getPhotoCount() + 1);
-            project.setUpdatedAt(new Date());
-            heartWallProjectService.updateHeartWallProject(project);
-            
-            // 构造返回数据
-            Map<String, Object> result = new HashMap<>();
-            result.put("photoId", photo.getId());
-            result.put("projectId", photo.getProjectId());
-            result.put("photoUrl", photo.getPhotoUrl());
-            result.put("thumbnailUrl", photo.getThumbnailUrl());
-            result.put("positionIndex", photo.getPositionIndex());
-            result.put("caption", photo.getCaption());
-            result.put("takenDate", photo.getTakenDate());
-            result.put("uploadedAt", photo.getUploadedAt());
-            
-            return AjaxResult.success("上传成功", result);
-        } catch (Exception e) {
-            return AjaxResult.error("上传照片失败: " + e.getMessage());
-        }
-    }
-    
+//    @PostMapping("/photos")
+//    public AjaxResult uploadPhoto(@RequestBody UploadPhotoRequest request, HttpServletRequest httpServletRequest) {
+//        try {
+//            // 获取当前登录用户
+//            LoginUser loginUser = tokenService.getLoginUser(httpServletRequest);
+//            if (loginUser == null) {
+//                return AjaxResult.error("用户未登录");
+//            }
+//
+//            // 验证项目ID
+//            if (request.getProjectId() == null) {
+//                return AjaxResult.error("项目ID不能为空");
+//            }
+//
+//            // 验证照片URL
+//            if (request.getPhotoUrl() == null || request.getPhotoUrl().trim().isEmpty()) {
+//                return AjaxResult.error("照片URL不能为空");
+//            }
+//
+//            // 验证位置索引
+//            if (request.getPositionIndex() == null) {
+//                return AjaxResult.error("位置索引不能为空");
+//            }
+//
+//            // 查询项目
+//            HeartWallProject project = heartWallProjectService.selectHeartWallProjectById(request.getProjectId());
+//            if (project == null) {
+//                return AjaxResult.error("项目不存在");
+//            }
+//
+//            // 验证用户权限（只能在自己的项目中上传照片）
+//            if (!project.getUserId().equals(loginUser.getUserId())) {
+//                return AjaxResult.error("无权限在该项目中上传照片");
+//            }
+//
+//            // 验证位置索引是否超出范围
+//            if (request.getPositionIndex() < 1 || request.getPositionIndex() > project.getMaxPhotos()) {
+//                return AjaxResult.error("位置索引超出范围");
+//            }
+//
+//            // 检查该位置是否已有照片
+//            HeartWallPhoto existingPhoto = heartWallPhotoService.selectHeartWallPhotoByProjectAndPosition(
+//                request.getProjectId(), request.getPositionIndex());
+//            if (existingPhoto != null) {
+//                return AjaxResult.error("该位置已存在照片，请先删除原有照片");
+//            }
+//
+//            // 创建照片记录
+//            HeartWallPhoto photo = new HeartWallPhoto();
+//            photo.setProjectId(request.getProjectId());
+//            photo.setUserId(loginUser.getUserId());
+//            // 存储相对路径到数据库
+//            photo.setPhotoUrl(request.getPhotoUrl().trim());
+//            photo.setThumbnailUrl(request.getThumbnailUrl() != null ? request.getThumbnailUrl().trim() : null);
+//            photo.setPositionIndex(request.getPositionIndex());
+//            photo.setCaption(request.getCaption() != null ? request.getCaption().trim() : null);
+//            photo.setTakenDate(request.getTakenDate());
+//            photo.setUploadedAt(new Date());
+//            photo.setUpdatedAt(new Date());
+//
+//            // 保存照片
+//            heartWallPhotoService.insertHeartWallPhoto(photo);
+//
+//            // 更新项目照片数量
+//            project.setPhotoCount(project.getPhotoCount() + 1);
+//            project.setUpdatedAt(new Date());
+//            heartWallProjectService.updateHeartWallProject(project);
+//
+//            // 构造返回数据
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("photoId", photo.getId());
+//            result.put("projectId", photo.getProjectId());
+//            result.put("photoUrl", photo.getPhotoUrl());
+//            result.put("thumbnailUrl", photo.getThumbnailUrl());
+//            result.put("positionIndex", photo.getPositionIndex());
+//            result.put("caption", photo.getCaption());
+//            result.put("takenDate", photo.getTakenDate());
+//            result.put("uploadedAt", photo.getUploadedAt());
+//
+//            return AjaxResult.success("上传成功", result);
+//        } catch (Exception e) {
+//            return AjaxResult.error("上传照片失败: " + e.getMessage());
+//        }
+//    }
+//
     /**
      * 上传照片（方式二：直接上传文件）
+     * Modified to properly handle file uploads and store relative paths in database
      */
-    @PostMapping("/photos/upload")
+    @PostMapping(value = "/photos/upload", consumes = {"multipart/form-data", "multipart/form-data;*"})
+    // 确保方法能够处理multipart请求
     public AjaxResult uploadPhotoFile(@RequestParam("file") MultipartFile file, 
                                       @RequestParam("projectId") Long projectId,
                                       @RequestParam("positionIndex") Integer positionIndex,
@@ -353,90 +361,155 @@ public class HeartWallController {
                                       @RequestParam(value = "takenDate", required = false) Date takenDate,
                                       HttpServletRequest httpServletRequest) {
         try {
+            // 检查请求是否为multipart类型
+            if (!isMultipartRequest(httpServletRequest)) {
+                return AjaxResult.error("请求类型不正确，应为multipart/form-data");
+            }
+            
             // 获取当前登录用户
             LoginUser loginUser = tokenService.getLoginUser(httpServletRequest);
             if (loginUser == null) {
                 return AjaxResult.error("用户未登录");
             }
-            
-            // 验证文件
+
+            // 验证文件是否为空
             if (file == null || file.isEmpty()) {
                 return AjaxResult.error("请选择要上传的文件");
             }
-            
+
             // 验证项目ID
             if (projectId == null) {
                 return AjaxResult.error("项目ID不能为空");
             }
-            
+
             // 验证位置索引
             if (positionIndex == null) {
                 return AjaxResult.error("位置索引不能为空");
             }
-            
+
             // 查询项目
             HeartWallProject project = heartWallProjectService.selectHeartWallProjectById(projectId);
             if (project == null) {
                 return AjaxResult.error("项目不存在");
             }
-            
+
             // 验证用户权限（只能在自己的项目中上传照片）
             if (!project.getUserId().equals(loginUser.getUserId())) {
                 return AjaxResult.error("无权限在该项目中上传照片");
             }
-            
+
             // 验证位置索引是否超出范围
             if (positionIndex < 1 || positionIndex > project.getMaxPhotos()) {
                 return AjaxResult.error("位置索引超出范围");
             }
-            
+
             // 检查该位置是否已有照片
             HeartWallPhoto existingPhoto = heartWallPhotoService.selectHeartWallPhotoByProjectAndPosition(
                 projectId, positionIndex);
             if (existingPhoto != null) {
                 return AjaxResult.error("该位置已存在照片，请先删除原有照片");
             }
-            
-            // 这里应该处理文件上传逻辑，保存到服务器并获取URL
-            // 由于这是一个示例，我们返回一个模拟的photoUrl
-            String photoUrl = "https://example.com/uploaded-photos/" + System.currentTimeMillis() + "-" + file.getOriginalFilename();
-            String thumbnailUrl = "https://example.com/uploaded-photos/thumb-" + System.currentTimeMillis() + "-" + file.getOriginalFilename();
-            
+
+            // 验证文件大小（限制在5MB以内）
+            long maxSize = 5 * 1024 * 1024L; // 5MB
+            if (file.getSize() > maxSize) {
+                return AjaxResult.error("文件大小不能超过5MB");
+            }
+
+            // 定义允许的图片格式
+            String[] allowedExtension = { "jpg", "jpeg", "png" };
+
+            // 上传文件路径 - 使用心形墙专用路径
+            String filePath = RuoYiConfig.getProfile() + "/uploads/heartwall";
+
+            // 使用若依框架的文件上传工具上传文件
+            String fileName = FileUploadUtils.upload(filePath, file, allowedExtension, true);
+
+            // 构造返回数据 - 返回完整的URL路径
+            String photoUrl = buildFullImageUrl(httpServletRequest, fileName);
+            System.out.println("aaa"+photoUrl);
             // 创建照片记录
             HeartWallPhoto photo = new HeartWallPhoto();
             photo.setProjectId(projectId);
             photo.setUserId(loginUser.getUserId());
-            photo.setPhotoUrl(photoUrl);
-            photo.setThumbnailUrl(thumbnailUrl);
+            // 存储相对路径到数据库
+            photo.setPhotoUrl(fileName);
+            photo.setThumbnailUrl(null); // 可以根据需要添加缩略图逻辑
             photo.setPositionIndex(positionIndex);
             photo.setCaption(caption != null ? caption.trim() : null);
             photo.setTakenDate(takenDate);
             photo.setUploadedAt(new Date());
             photo.setUpdatedAt(new Date());
-            
+
             // 保存照片
             heartWallPhotoService.insertHeartWallPhoto(photo);
-            
+
             // 更新项目照片数量
             project.setPhotoCount(project.getPhotoCount() + 1);
             project.setUpdatedAt(new Date());
             heartWallProjectService.updateHeartWallProject(project);
-            
+
             // 构造返回数据
             Map<String, Object> result = new HashMap<>();
             result.put("photoId", photo.getId());
             result.put("projectId", photo.getProjectId());
-            result.put("photoUrl", photo.getPhotoUrl());
+            result.put("photoUrl", photoUrl); // 返回完整URL给前端
             result.put("thumbnailUrl", photo.getThumbnailUrl());
             result.put("positionIndex", photo.getPositionIndex());
             result.put("caption", photo.getCaption());
             result.put("takenDate", photo.getTakenDate());
             result.put("uploadedAt", photo.getUploadedAt());
-            
+
             return AjaxResult.success("上传成功", result);
+        } catch (FileSizeLimitExceededException e) {
+            return AjaxResult.error("文件大小不能超过5MB");
+        } catch (InvalidExtensionException e) {
+            return AjaxResult.error("仅支持jpg、jpeg、png格式的图片");
         } catch (Exception e) {
             return AjaxResult.error("上传照片失败: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 构建完整的图片URL
+     * 
+     * @param request HTTP请求
+     * @param fileName 文件名（相对路径）
+     * @return 完整的图片访问URL
+     */
+    private String buildFullImageUrl(HttpServletRequest request, String fileName) {
+        // 1. 获取协议（http/https）
+        String scheme = request.getScheme();
+        // 2. 获取域名或 IP（如 "smallpeppers.cn" 或 "192.168.1.100"）
+        String serverName = request.getServerName();
+        // 3. 获取端口（如 80、443、8886）
+        int serverPort = request.getServerPort();
+        // 4. 获取项目上下文路径（若依项目默认部署在根目录，此值为空）
+        String contextPath = request.getContextPath();
+
+        // 5. 拼接 URL（格式：协议://域名:端口/上下文路径/图片相对路径）
+        StringBuilder url = new StringBuilder();
+        url.append(scheme).append("://").append(serverName);
+        // 只有非默认端口（80 或 443）才需要拼接端口号
+        if ((scheme.equals("http") && serverPort != 80) || (scheme.equals("https") && serverPort != 443)) {
+            url.append(":").append(serverPort);
+        }
+        url.append(contextPath)
+                .append("/profile/") // 与上传目录对应（若依默认/profile是静态资源前缀）
+                .append(fileName);
+
+        return url.toString();
+    }
+
+    /**
+     * 检查请求是否为multipart类型
+     * 
+     * @param request HTTP请求
+     * @return 是否为multipart请求
+     */
+    private boolean isMultipartRequest(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return contentType != null && contentType.toLowerCase().startsWith("multipart/");
     }
     
     /**
@@ -483,6 +556,68 @@ public class HeartWallController {
             return AjaxResult.success("删除成功", result);
         } catch (Exception e) {
             return AjaxResult.error("删除照片失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 更新照片
+     */
+    @PutMapping("/photos/{photoId}")
+    public AjaxResult updatePhoto(@PathVariable Long photoId,
+                                  @RequestParam(value = "caption", required = false) String caption,
+                                  @RequestParam(value = "takenDate", required = false) Date takenDate,
+                                  HttpServletRequest httpServletRequest) {
+        try {
+            // 获取当前登录用户
+            LoginUser loginUser = tokenService.getLoginUser(httpServletRequest);
+            if (loginUser == null) {
+                return AjaxResult.error("用户未登录");
+            }
+            
+            // 查询照片
+            HeartWallPhoto photo = heartWallPhotoService.selectHeartWallPhotoById(photoId);
+            if (photo == null) {
+                return AjaxResult.error("照片不存在");
+            }
+            
+            // 查询项目
+            HeartWallProject project = heartWallProjectService.selectHeartWallProjectById(photo.getProjectId());
+            if (project == null) {
+                return AjaxResult.error("项目不存在");
+            }
+            
+            // 验证用户权限（只能更新自己项目中的照片）
+            if (!project.getUserId().equals(loginUser.getUserId())) {
+                return AjaxResult.error("无权限更新该照片");
+            }
+            
+            // 更新照片信息
+            if (caption != null) {
+                photo.setCaption(caption.trim());
+            }
+            if (takenDate != null) {
+                photo.setTakenDate(takenDate);
+            }
+            photo.setUpdatedAt(new Date());
+            
+            // 保存更新
+            heartWallPhotoService.updateHeartWallPhoto(photo);
+            
+            // 构造返回数据
+            Map<String, Object> result = new HashMap<>();
+            result.put("photoId", photo.getId());
+            result.put("projectId", photo.getProjectId());
+            result.put("photoUrl", buildFullImageUrl(httpServletRequest, photo.getPhotoUrl()));
+            result.put("thumbnailUrl", photo.getThumbnailUrl());
+            result.put("positionIndex", photo.getPositionIndex());
+            result.put("caption", photo.getCaption());
+            result.put("takenDate", photo.getTakenDate());
+            result.put("uploadedAt", photo.getUploadedAt());
+            result.put("updatedAt", photo.getUpdatedAt());
+            
+            return AjaxResult.success("更新成功", result);
+        } catch (Exception e) {
+            return AjaxResult.error("更新照片失败: " + e.getMessage());
         }
     }
     
