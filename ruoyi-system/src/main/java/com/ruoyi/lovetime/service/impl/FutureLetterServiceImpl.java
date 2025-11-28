@@ -67,6 +67,16 @@ public class FutureLetterServiceImpl implements IFutureLetterService {
     }
 
     /**
+     * 查询待发送的未来情书
+     * 
+     * @return 待发送的未来情书集合
+     */
+    @Override
+    public List<FutureLetter> selectScheduledLettersToSend() {
+        return futureLetterMapper.selectScheduledLettersToSend();
+    }
+
+    /**
      * 新增未来情书
      * 
      * @param futureLetter 未来情书

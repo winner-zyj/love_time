@@ -496,4 +496,31 @@ public class FutureLetterController {
         fontMap.put("sample", sample);
         return fontMap;
     }
+    
+    /**
+     * 获取用户未读的未来情书
+     */
+    @GetMapping("/unread")
+    public AjaxResult getUnreadLetters(HttpServletRequest request) {
+        try {
+            // 获取当前登录用户
+            LoginUser loginUser = tokenService.getLoginUser(request);
+            if (loginUser == null) {
+                return AjaxResult.error("用户未登录");
+            }
+            
+            // 查询用户收到的未读情书列表（状态为已发送但未读）
+            List<FutureLetter> letters = futureLetterService.selectFutureLettersByReceiverId(
+                loginUser.getUserId(), "已发送");
+            
+            // 过滤出未读的情书
+            List<FutureLetter> unreadLetters = letters.stream()
+                .filter(letter -> letter.getReadAt() == null)
+                .collect(java.util.stream.Collectors.toList());
+            
+            return AjaxResult.success("获取未读情书成功").put("letters", unreadLetters);
+        } catch (Exception e) {
+            return AjaxResult.error("获取未读情书失败: " + e.getMessage());
+        }
+    }
 }

@@ -38,6 +38,13 @@ public interface FutureLetterMapper {
     public List<FutureLetter> selectFutureLettersByReceiverId(@Param("receiverId") Long receiverId, @Param("status") String status);
     
     /**
+     * 查询待发送的未来情书
+     * 
+     * @return 待发送的未来情书集合
+     */
+    public List<FutureLetter> selectScheduledLettersToSend();
+    
+    /**
      * 根据ID查询未来情书
      * 
      * @param id 未来情书ID

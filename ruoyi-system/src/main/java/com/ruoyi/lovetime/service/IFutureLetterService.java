@@ -45,6 +45,13 @@ public interface IFutureLetterService {
     public List<FutureLetter> selectFutureLettersByReceiverId(Long receiverId, String status);
 
     /**
+     * 查询待发送的未来情书
+     * 
+     * @return 待发送的未来情书集合
+     */
+    public List<FutureLetter> selectScheduledLettersToSend();
+
+    /**
      * 新增未来情书
      * 
      * @param futureLetter 未来情书

@@ -59,6 +59,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by created_at desc
     </select>
     
+    <select id="selectScheduledLettersToSend" resultMap="FutureLetterResult">
+        <include refid="selectFutureLetterVo"/>
+        where status = '已安排' 
+        and is_deleted = 0
+        and (
+            (scheduled_date &lt; curdate())
+            or 
+            (scheduled_date = curdate() and scheduled_time &lt;= curtime())
+        )
+    </select>
+    
     <select id="selectFutureLetterById" parameterType="Long" resultMap="FutureLetterResult">
         <include refid="selectFutureLetterVo"/>
         where id = #{id} and is_deleted = 0

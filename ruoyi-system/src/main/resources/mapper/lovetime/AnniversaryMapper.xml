@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.lovetime.mapper.AnniversaryMapper">
+    
+    <resultMap type="Anniversary" id="AnniversaryResult">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="title" column="title"/>
+        <result property="date" column="date"/>
+        <result property="icon" column="icon"/>
+        <result property="color" column="color"/>
+        <result property="remind" column="remind"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    
+    <sql id="selectAnniversaryVo">
+        select id, user_id, title, date, icon, color, remind, create_time, update_time from at_anniversaries
+    </sql>
+    
+    <select id="selectAnniversaryListByUserId" parameterType="Long" resultMap="AnniversaryResult">
+        <include refid="selectAnniversaryVo"/>
+        where user_id = #{userId}
+        order by date desc
+    </select>
+    
+    <select id="selectAnniversaryById" parameterType="Long" resultMap="AnniversaryResult">
+        <include refid="selectAnniversaryVo"/>
+        where id = #{id}
+    </select>
+    
+    <insert id="insertAnniversary" parameterType="Anniversary" useGeneratedKeys="true" keyProperty="id">
+        insert into at_anniversaries
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="date != null">date,</if>
+            <if test="icon != null">icon,</if>
+            <if test="color != null">color,</if>
+            <if test="remind != null">remind,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="date != null">#{date},</if>
+            <if test="icon != null">#{icon},</if>
+            <if test="color != null">#{color},</if>
+            <if test="remind != null">#{remind},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+    
+    <update id="updateAnniversary" parameterType="Anniversary">
+        update at_anniversaries
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="date != null">date = #{date},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="color != null">color = #{color},</if>
+            <if test="remind != null">remind = #{remind},</if>
+            update_time = #{updateTime},
+        </set>
+        where id = #{id}
+    </update>
+    
+    <delete id="deleteAnniversaryById" parameterType="Long">
+        delete from at_anniversaries where id = #{id}
+    </delete>
+    
+    <delete id="deleteAnniversaryByIds" parameterType="Long">
+        delete from at_anniversaries where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

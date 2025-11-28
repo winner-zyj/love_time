@@ -120,6 +120,12 @@ public class HeartWallController {
             // 查询用户的心形墙项目列表
             List<HeartWallProject> projects = heartWallProjectService.selectHeartWallProjectsByUserId(loginUser.getUserId());
             
+            // 为每个项目动态计算照片数量
+            for (HeartWallProject project : projects) {
+                List<HeartWallPhoto> photos = heartWallPhotoService.selectHeartWallPhotosByProjectId(project.getId());
+                project.setPhotoCount(photos.size());
+            }
+            
             return AjaxResult.success(projects);
         } catch (Exception e) {
             return AjaxResult.error("获取项目列表失败: " + e.getMessage());
@@ -151,6 +157,17 @@ public class HeartWallController {
             
             // 查询项目下的照片列表
             List<HeartWallPhoto> photos = heartWallPhotoService.selectHeartWallPhotosByProjectId(projectId);
+            
+            // 动态计算照片数量并更新项目对象
+            project.setPhotoCount(photos.size());
+            
+            // 转换照片URL为完整网络路径
+            for (HeartWallPhoto photo : photos) {
+                photo.setPhotoUrl(buildFullImageUrl(httpServletRequest, photo.getPhotoUrl()));
+                if (photo.getThumbnailUrl() != null) {
+                    photo.setThumbnailUrl(buildFullImageUrl(httpServletRequest, photo.getThumbnailUrl()));
+                }
+            }
             
             // 构造返回数据
             Map<String, Object> result = new HashMap<>();
@@ -200,6 +217,10 @@ public class HeartWallController {
                 project.setMaxPhotos(request.getMaxPhotos());
             }
             project.setUpdatedAt(new Date());
+            
+            // 在更新项目之前，动态计算当前的照片数量
+            List<HeartWallPhoto> photos = heartWallPhotoService.selectHeartWallPhotosByProjectId(projectId);
+            project.setPhotoCount(photos.size());
             
             // 保存更新
             heartWallProjectService.updateHeartWallProject(project);
@@ -258,6 +279,75 @@ public class HeartWallController {
         } catch (Exception e) {
             return AjaxResult.error("删除项目失败: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 清空项目中的所有照片 (DELETE 方法)
+     */
+    @DeleteMapping("/clear-photos/{projectId}")
+    public AjaxResult clearPhotos(@PathVariable Long projectId, HttpServletRequest httpServletRequest) {
+        try {
+            // 获取当前登录用户
+            LoginUser loginUser = tokenService.getLoginUser(httpServletRequest);
+            if (loginUser == null) {
+                return AjaxResult.error("用户未登录");
+            }
+            
+            // 查询项目
+            HeartWallProject project = heartWallProjectService.selectHeartWallProjectById(projectId);
+            if (project == null) {
+                return AjaxResult.error("项目不存在");
+            }
+            
+            // 验证用户权限（只能清空自己项目中的照片）
+            if (!project.getUserId().equals(loginUser.getUserId())) {
+                return AjaxResult.error("无权限清空该项目的照片");
+            }
+            
+            // 删除项目下的所有照片
+            heartWallPhotoService.deleteHeartWallPhotosByProjectId(projectId);
+            
+            // 更新项目照片数量为0
+            project.setPhotoCount(0);
+            project.setUpdatedAt(new Date());
+            heartWallProjectService.updateHeartWallProject(project);
+            
+            // 查询项目下的照片列表（应该为空）
+            List<HeartWallPhoto> photos = heartWallPhotoService.selectHeartWallPhotosByProjectId(projectId);
+            
+            // 构造返回数据，包含完整的项目信息和照片列表
+            Map<String, Object> result = new HashMap<>();
+            result.put("project", project);
+            result.put("photos", photos);
+            
+            return AjaxResult.success("照片清空成功", result);
+        } catch (Exception e) {
+            return AjaxResult.error("清空照片失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 清空项目中的所有照片 (PUT 方法，用于兼容前端)
+     */
+    @PutMapping("/clear-photos/{projectId}")
+    public AjaxResult clearPhotosPut(@PathVariable Long projectId, HttpServletRequest httpServletRequest) {
+        return clearPhotos(projectId, httpServletRequest);
+    }
+    
+    /**
+     * 清空项目中的所有照片 (DELETE 方法，使用查询参数，用于兼容前端)
+     */
+    @DeleteMapping("/clear-photos")
+    public AjaxResult clearPhotosWithQueryParam(@RequestParam("projectId") Long projectId, HttpServletRequest httpServletRequest) {
+        return clearPhotos(projectId, httpServletRequest);
+    }
+    
+    /**
+     * 清空项目中的所有照片 (PUT 方法，使用查询参数，用于兼容前端)
+     */
+    @PutMapping("/clear-photos")
+    public AjaxResult clearPhotosPutWithQueryParam(@RequestParam("projectId") Long projectId, HttpServletRequest httpServletRequest) {
+        return clearPhotos(projectId, httpServletRequest);
     }
     
     /**
@@ -403,11 +493,11 @@ public class HeartWallController {
                 return AjaxResult.error("位置索引超出范围");
             }
 
-            // 检查该位置是否已有照片
+            // 检查该位置是否已有照片，如果存在则删除原有照片
             HeartWallPhoto existingPhoto = heartWallPhotoService.selectHeartWallPhotoByProjectAndPosition(
                 projectId, positionIndex);
             if (existingPhoto != null) {
-                return AjaxResult.error("该位置已存在照片，请先删除原有照片");
+                heartWallPhotoService.deleteHeartWallPhotoById(existingPhoto.getId());
             }
 
             // 验证文件大小（限制在5MB以内）
@@ -444,21 +534,26 @@ public class HeartWallController {
             // 保存照片
             heartWallPhotoService.insertHeartWallPhoto(photo);
 
+            // 查询项目下的所有照片
+            List<HeartWallPhoto> photos = heartWallPhotoService.selectHeartWallPhotosByProjectId(projectId);
+
             // 更新项目照片数量
-            project.setPhotoCount(project.getPhotoCount() + 1);
+            project.setPhotoCount(photos.size());
             project.setUpdatedAt(new Date());
             heartWallProjectService.updateHeartWallProject(project);
 
-            // 构造返回数据
+            // 转换所有照片URL为完整网络路径
+            for (HeartWallPhoto p : photos) {
+                p.setPhotoUrl(buildFullImageUrl(httpServletRequest, p.getPhotoUrl()));
+                if (p.getThumbnailUrl() != null) {
+                    p.setThumbnailUrl(buildFullImageUrl(httpServletRequest, p.getThumbnailUrl()));
+                }
+            }
+
+            // 构造返回数据，包含完整的项目信息和照片列表
             Map<String, Object> result = new HashMap<>();
-            result.put("photoId", photo.getId());
-            result.put("projectId", photo.getProjectId());
-            result.put("photoUrl", photoUrl); // 返回完整URL给前端
-            result.put("thumbnailUrl", photo.getThumbnailUrl());
-            result.put("positionIndex", photo.getPositionIndex());
-            result.put("caption", photo.getCaption());
-            result.put("takenDate", photo.getTakenDate());
-            result.put("uploadedAt", photo.getUploadedAt());
+            result.put("project", project);
+            result.put("photos", photos);
 
             return AjaxResult.success("上传成功", result);
         } catch (FileSizeLimitExceededException e) {
@@ -544,14 +639,26 @@ public class HeartWallController {
             // 删除照片
             heartWallPhotoService.deleteHeartWallPhotoById(photoId);
             
-            // 更新项目照片数量
-            project.setPhotoCount(Math.max(0, project.getPhotoCount() - 1));
+            // 查询项目下的所有照片
+            List<HeartWallPhoto> photos = heartWallPhotoService.selectHeartWallPhotosByProjectId(project.getId());
+            
+            // 动态计算照片数量并更新项目对象
+            project.setPhotoCount(photos.size());
             project.setUpdatedAt(new Date());
             heartWallProjectService.updateHeartWallProject(project);
             
-            // 构造返回数据
+            // 转换所有照片URL为完整网络路径
+            for (HeartWallPhoto p : photos) {
+                p.setPhotoUrl(buildFullImageUrl(httpServletRequest, p.getPhotoUrl()));
+                if (p.getThumbnailUrl() != null) {
+                    p.setThumbnailUrl(buildFullImageUrl(httpServletRequest, p.getThumbnailUrl()));
+                }
+            }
+            
+            // 构造返回数据，包含完整的项目信息和照片列表
             Map<String, Object> result = new HashMap<>();
-            result.put("deleted", true);
+            result.put("project", project);
+            result.put("photos", photos);
             
             return AjaxResult.success("删除成功", result);
         } catch (Exception e) {
@@ -564,8 +671,7 @@ public class HeartWallController {
      */
     @PutMapping("/photos/{photoId}")
     public AjaxResult updatePhoto(@PathVariable Long photoId,
-                                  @RequestParam(value = "caption", required = false) String caption,
-                                  @RequestParam(value = "takenDate", required = false) Date takenDate,
+                                  @RequestBody UpdatePhotoRequest request,
                                   HttpServletRequest httpServletRequest) {
         try {
             // 获取当前登录用户
@@ -592,28 +698,44 @@ public class HeartWallController {
             }
             
             // 更新照片信息
-            if (caption != null) {
-                photo.setCaption(caption.trim());
+            if (request.getCaption() != null) {
+                photo.setCaption(request.getCaption().trim());
             }
-            if (takenDate != null) {
-                photo.setTakenDate(takenDate);
+            if (request.getTakenDate() != null) {
+                photo.setTakenDate(request.getTakenDate());
+            }
+            if (request.getPhotoUrl() != null) {
+                photo.setPhotoUrl(request.getPhotoUrl().trim());
+            }
+            if (request.getThumbnailUrl() != null) {
+                photo.setThumbnailUrl(request.getThumbnailUrl().trim());
+            }
+            if (request.getPositionIndex() != null) {
+                photo.setPositionIndex(request.getPositionIndex());
             }
             photo.setUpdatedAt(new Date());
             
             // 保存更新
             heartWallPhotoService.updateHeartWallPhoto(photo);
             
-            // 构造返回数据
+            // 查询项目下的所有照片
+            List<HeartWallPhoto> photos = heartWallPhotoService.selectHeartWallPhotosByProjectId(project.getId());
+            
+            // 动态计算照片数量并更新项目对象
+            project.setPhotoCount(photos.size());
+            
+            // 转换所有照片URL为完整网络路径
+            for (HeartWallPhoto p : photos) {
+                p.setPhotoUrl(buildFullImageUrl(httpServletRequest, p.getPhotoUrl()));
+                if (p.getThumbnailUrl() != null) {
+                    p.setThumbnailUrl(buildFullImageUrl(httpServletRequest, p.getThumbnailUrl()));
+                }
+            }
+            
+            // 构造返回数据，包含完整的项目信息和照片列表
             Map<String, Object> result = new HashMap<>();
-            result.put("photoId", photo.getId());
-            result.put("projectId", photo.getProjectId());
-            result.put("photoUrl", buildFullImageUrl(httpServletRequest, photo.getPhotoUrl()));
-            result.put("thumbnailUrl", photo.getThumbnailUrl());
-            result.put("positionIndex", photo.getPositionIndex());
-            result.put("caption", photo.getCaption());
-            result.put("takenDate", photo.getTakenDate());
-            result.put("uploadedAt", photo.getUploadedAt());
-            result.put("updatedAt", photo.getUpdatedAt());
+            result.put("project", project);
+            result.put("photos", photos);
             
             return AjaxResult.success("更新成功", result);
         } catch (Exception e) {
@@ -723,6 +845,57 @@ public class HeartWallController {
         public void setProjectId(Long projectId) {
             this.projectId = projectId;
         }
+        
+        public String getPhotoUrl() {
+            return photoUrl;
+        }
+        
+        public void setPhotoUrl(String photoUrl) {
+            this.photoUrl = photoUrl;
+        }
+        
+        public String getThumbnailUrl() {
+            return thumbnailUrl;
+        }
+        
+        public void setThumbnailUrl(String thumbnailUrl) {
+            this.thumbnailUrl = thumbnailUrl;
+        }
+        
+        public Integer getPositionIndex() {
+            return positionIndex;
+        }
+        
+        public void setPositionIndex(Integer positionIndex) {
+            this.positionIndex = positionIndex;
+        }
+        
+        public String getCaption() {
+            return caption;
+        }
+        
+        public void setCaption(String caption) {
+            this.caption = caption;
+        }
+        
+        public Date getTakenDate() {
+            return takenDate;
+        }
+        
+        public void setTakenDate(Date takenDate) {
+            this.takenDate = takenDate;
+        }
+    }
+    
+    /**
+     * 更新照片请求类
+     */
+    public static class UpdatePhotoRequest {
+        private String photoUrl;
+        private String thumbnailUrl;
+        private Integer positionIndex;
+        private String caption;
+        private Date takenDate;
         
         public String getPhotoUrl() {
             return photoUrl;
