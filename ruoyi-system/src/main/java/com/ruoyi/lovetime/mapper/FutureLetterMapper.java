@@ -38,13 +38,6 @@ public interface FutureLetterMapper {
     public List<FutureLetter> selectFutureLettersByReceiverId(@Param("receiverId") Long receiverId, @Param("status") String status);
     
     /**
-     * 查询待发送的未来情书
-     * 
-     * @return 待发送的未来情书集合
-     */
-    public List<FutureLetter> selectScheduledLettersToSend();
-    
-    /**
      * 根据ID查询未来情书
      * 
      * @param id 未来情书ID
@@ -61,14 +54,6 @@ public interface FutureLetterMapper {
     public int insertFutureLetter(FutureLetter futureLetter);
     
     /**
-     * 修改未来情书
-     * 
-     * @param futureLetter 未来情书
-     * @return 结果
-     */
-    public int updateFutureLetter(FutureLetter futureLetter);
-    
-    /**
      * 删除未来情书
      * 
      * @param id 未来情书ID
@@ -83,4 +68,11 @@ public interface FutureLetterMapper {
      * @return 结果
      */
     public int deleteFutureLetterByIds(Long[] ids);
+    
+    /**
+     * 查询待发送的未来情书
+     * 
+     * @return 待发送的未来情书集合
+     */
+    public List<FutureLetter> selectScheduledLettersToSend();
 }

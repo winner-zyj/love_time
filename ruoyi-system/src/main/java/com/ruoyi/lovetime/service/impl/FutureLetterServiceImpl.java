@@ -88,17 +88,6 @@ public class FutureLetterServiceImpl implements IFutureLetterService {
     }
 
     /**
-     * 修改未来情书
-     * 
-     * @param futureLetter 未来情书
-     * @return 结果
-     */
-    @Override
-    public int updateFutureLetter(FutureLetter futureLetter) {
-        return futureLetterMapper.updateFutureLetter(futureLetter);
-    }
-
-    /**
      * 批量删除未来情书
      * 
      * @param ids 需要删除的未来情书ID

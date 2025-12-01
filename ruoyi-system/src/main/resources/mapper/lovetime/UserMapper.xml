@@ -107,4 +107,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </delete>
 
+    <update id="updateUserAvatar">
+        update at_users set avatarUrl = #{avatarUrl}, updated_at = sysdate() where id = #{id}
+    </update>
+
 </mapper>

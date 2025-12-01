@@ -43,15 +43,11 @@ public class FutureLetterSchedulerServiceImpl {
                     try {
                         // 更新情书状态为"已发送"
                         letter.setStatus("已发送");
-                        letter.setSentAt(new Date());
-                        letter.setUpdatedAt(new Date());
+                        // 确保 sent_at 和 scheduled_time 保持一致
+                        letter.setSentAt(letter.getScheduledTime());
                         
-                        int result = futureLetterService.updateFutureLetter(letter);
-                        if (result > 0) {
-                            log.info("成功发送未来情书，ID: {}, 标题: {}", letter.getId(), letter.getTitle());
-                        } else {
-                            log.warn("发送未来情书失败，ID: {}, 标题: {}", letter.getId(), letter.getTitle());
-                        }
+                        // 不再支持更新功能
+                        log.warn("更新功能已禁用，无法发送未来情书，ID: {}, 标题: {}", letter.getId(), letter.getTitle());
                     } catch (Exception e) {
                         log.error("处理未来情书时发生错误，ID: {}, 标题: {}", letter.getId(), letter.getTitle(), e);
                     }

@@ -2,6 +2,8 @@ package com.ruoyi.common.core.domain.lovetime;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * 纪念日实体类
  * 
@@ -19,6 +21,7 @@ public class Anniversary {
     private String title;
     
     /** 纪念日日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date date;
     
     /** 图标名称 */
@@ -31,9 +34,11 @@ public class Anniversary {
     private Boolean remind;
     
     /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
     
     /** 更新时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
     
     // Getters and Setters

@@ -1,6 +1,8 @@
 package com.ruoyi.lovetime.mapper;
 
 import com.ruoyi.common.core.domain.lovetime.User;
+import org.apache.ibatis.annotations.Param;
+
 import java.util.List;
 
 /**
@@ -90,4 +92,13 @@ public interface UserMapper
      * @return 结果
      */
     public int deleteUserByIds(Long[] ids);
+
+    /**
+     * 更新用户头像
+     * 
+     * @param id 用户ID
+     * @param avatarUrl 头像URL
+     * @return 结果
+     */
+    public int updateUserAvatar(@Param("id") Long id, @Param("avatarUrl") String avatarUrl);
 }

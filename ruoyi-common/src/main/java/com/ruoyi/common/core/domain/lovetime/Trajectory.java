@@ -2,6 +2,8 @@ package com.ruoyi.common.core.domain.lovetime;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * 轨迹实体类
  * 
@@ -22,6 +24,7 @@ public class Trajectory {
     private Double longitude;
     
     /** 访问时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date visitTime;
     
     /** 地址名称 */
@@ -40,9 +43,11 @@ public class Trajectory {
     private Boolean isShared;
     
     /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
     
     /** 更新时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updatedAt;
     
     // Getters and Setters

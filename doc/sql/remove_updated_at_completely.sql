@@ -1,6 +1,14 @@
 -- ----------------------------
--- Table structure for at_future_letter
+-- 完全移除 future_letter 表中的 updated_at 字段
 -- ----------------------------
+
+-- 1. 删除 updated_at 列
+ALTER TABLE `at_future_letter` 
+DROP COLUMN `updated_at`;
+
+-- 2. 如果需要重新创建表（可选方案）
+-- 注意：这将删除所有现有数据，请谨慎使用
+/*
 DROP TABLE IF EXISTS `at_future_letter`;
 CREATE TABLE `at_future_letter` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '信件ID',
@@ -11,7 +19,6 @@ CREATE TABLE `at_future_letter` (
   `delivery_method` varchar(20) DEFAULT '情侣对方' COMMENT '发送方式：情侣对方',
   `scheduled_time` datetime DEFAULT NULL COMMENT '预计发送时间',
   `created_at` datetime DEFAULT NULL COMMENT '创建时间',
-  `updated_at` datetime DEFAULT NULL COMMENT '更新时间',
   `status` varchar(20) DEFAULT '草稿' COMMENT '状态：草稿/已安排/已发送/已读/已取消',
   `sent_at` datetime DEFAULT NULL COMMENT '实际发送时间',
   `read_at` datetime DEFAULT NULL COMMENT '阅读时间',
@@ -29,3 +36,4 @@ CREATE TABLE `at_future_letter` (
   KEY `idx_receiver_status` (`receiver_id`, `status`),
   KEY `idx_sender_status` (`sender_id`, `status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='未来情书表';
+*/

@@ -90,4 +90,13 @@ public interface IUserService
      * @return 结果
      */
     public int deleteUserById(Long id);
+
+    /**
+     * 更新用户头像
+     * 
+     * @param id 用户ID
+     * @param avatarUrl 头像URL
+     * @return 结果
+     */
+    public boolean updateUserAvatar(Long id, String avatarUrl);
 }

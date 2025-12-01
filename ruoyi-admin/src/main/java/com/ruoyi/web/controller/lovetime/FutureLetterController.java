@@ -1,5 +1,7 @@
 package com.ruoyi.web.controller.lovetime;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -256,7 +258,7 @@ public class FutureLetterController {
                 return AjaxResult.error("情书内容不能为空");
             }
             
-            if (letter.getScheduledDate() == null) {
+            if (letter.getScheduledTime() == null) {
                 return AjaxResult.error("发送时间不能为空");
             }
             
@@ -264,13 +266,12 @@ public class FutureLetterController {
             letter.setSenderId(loginUser.getUserId());
             
             // 设置默认状态
-            if (letter.getStatus() == null) {
+            if (letter.getStatus() == null || letter.getStatus().isEmpty()) {
                 letter.setStatus("SCHEDULED");
             }
             
-            // 设置创建和更新时间
+            // 设置创建时间
             letter.setCreatedAt(new Date());
-            letter.setUpdatedAt(new Date());
             
             // 保存情书
             futureLetterService.insertFutureLetter(letter);
@@ -278,47 +279,6 @@ public class FutureLetterController {
             return AjaxResult.success("创建成功", letter);
         } catch (Exception e) {
             return AjaxResult.error("创建情书失败: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * 更新情书
-     */
-    @PutMapping("/{id}")
-    public AjaxResult updateFutureLetter(@PathVariable Long id, @RequestBody FutureLetter letter, HttpServletRequest request) {
-        try {
-            // 获取当前登录用户
-            LoginUser loginUser = tokenService.getLoginUser(request);
-            if (loginUser == null) {
-                return AjaxResult.error("用户未登录");
-            }
-            
-            // 查询原有情书
-            FutureLetter existingLetter = futureLetterService.selectFutureLetterById(id);
-            if (existingLetter == null) {
-                return AjaxResult.error("情书不存在");
-            }
-            
-            // 验证用户权限
-            if (!existingLetter.getSenderId().equals(loginUser.getUserId())) {
-                return AjaxResult.error("无权限修改该情书");
-            }
-            
-            // 更新情书信息
-            existingLetter.setTitle(letter.getTitle());
-            existingLetter.setContent(letter.getContent());
-            existingLetter.setFontStyle(letter.getFontStyle());
-            existingLetter.setBackgroundImage(letter.getBackgroundImage());
-            existingLetter.setScheduledDate(letter.getScheduledDate());
-            existingLetter.setScheduledTime(letter.getScheduledTime());
-            existingLetter.setUpdatedAt(new Date());
-            
-            // 保存更新
-            futureLetterService.updateFutureLetter(existingLetter);
-            
-            return AjaxResult.success("更新成功", existingLetter);
-        } catch (Exception e) {
-            return AjaxResult.error("更新情书失败: " + e.getMessage());
         }
     }
     
@@ -390,11 +350,11 @@ public class FutureLetterController {
             
             // 更新状态为已发送
             existingLetter.setStatus("SENT");
-            existingLetter.setSentAt(new Date());
-            existingLetter.setUpdatedAt(new Date());
+            // 确保 sent_at 和 scheduled_time 保持一致
+            existingLetter.setSentAt(existingLetter.getScheduledTime());
             
-            // 保存更新
-            futureLetterService.updateFutureLetter(existingLetter);
+            // 不再支持更新功能
+            return AjaxResult.error("更新功能已禁用");
             
             // 构造返回数据
             Map<String, Object> result = new HashMap<>();
@@ -434,20 +394,30 @@ public class FutureLetterController {
             
             // 更新定时发送配置
             if (requestBody.containsKey("scheduleTime")) {
-                // 这里应该解析时间字符串，但为简化实现，直接设置
-                existingLetter.setScheduledDate(new Date());
+                // 解析时间字符串
+                Object scheduleTime = requestBody.get("scheduleTime");
+                if (scheduleTime instanceof String) {
+                    try {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        Date dateTime = sdf.parse((String) scheduleTime);
+                        existingLetter.setScheduledTime(dateTime);
+                    } catch (ParseException e) {
+                        return AjaxResult.error("时间格式错误");
+                    }
+                } else if (scheduleTime instanceof Date) {
+                    existingLetter.setScheduledTime((Date) scheduleTime);
+                }
             }
             
             existingLetter.setStatus("SCHEDULED");
-            existingLetter.setUpdatedAt(new Date());
             
-            // 保存更新
-            futureLetterService.updateFutureLetter(existingLetter);
+            // 不再支持更新功能
+            return AjaxResult.error("更新功能已禁用");
             
             // 构造返回数据
             Map<String, Object> result = new HashMap<>();
             result.put("id", existingLetter.getId());
-            result.put("scheduleTime", existingLetter.getScheduledDate());
+            result.put("scheduleTime", existingLetter.getScheduledTime());
             result.put("status", "SCHEDULED");
             
             return AjaxResult.success("定时发送配置更新成功", result);

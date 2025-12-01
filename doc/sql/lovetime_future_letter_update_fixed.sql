@@ -11,7 +11,10 @@ DROP COLUMN `scheduled_date`;
 ALTER TABLE `at_future_letter` 
 MODIFY COLUMN `scheduled_time` datetime DEFAULT NULL COMMENT '预计发送时间';
 
--- 更新索引
+-- 删除旧的索引
 ALTER TABLE `at_future_letter` 
-DROP INDEX `idx_status_scheduled`,
+DROP INDEX `idx_status_scheduled`;
+
+-- 添加新的索引
+ALTER TABLE `at_future_letter` 
 ADD INDEX `idx_status_scheduled` (`status`, `scheduled_time`);

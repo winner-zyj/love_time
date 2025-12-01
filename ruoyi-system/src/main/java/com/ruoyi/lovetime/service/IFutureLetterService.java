@@ -60,14 +60,6 @@ public interface IFutureLetterService {
     public int insertFutureLetter(FutureLetter futureLetter);
 
     /**
-     * 修改未来情书
-     * 
-     * @param futureLetter 未来情书
-     * @return 结果
-     */
-    public int updateFutureLetter(FutureLetter futureLetter);
-
-    /**
      * 批量删除未来情书
      * 
      * @param ids 需要删除的未来情书ID

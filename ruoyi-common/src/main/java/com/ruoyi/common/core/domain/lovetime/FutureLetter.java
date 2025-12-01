@@ -2,6 +2,8 @@ package com.ruoyi.common.core.domain.lovetime;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * 未来情书实体类
  * 
@@ -27,25 +29,23 @@ public class FutureLetter {
     /** 发送方式：情侣对方 */
     private String deliveryMethod;
     
-    /** 预计发送日期 */
-    private Date scheduledDate;
-    
     /** 预计发送时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date scheduledTime;
     
     /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
-    
-    /** 更新时间 */
-    private Date updatedAt;
     
     /** 状态：草稿/已安排/已发送/已读/已取消 */
     private String status;
     
     /** 实际发送时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date sentAt;
     
     /** 阅读时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date readAt;
     
     /** 背景图片URL */
@@ -67,6 +67,7 @@ public class FutureLetter {
     private Boolean isDeleted;
     
     /** 删除时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date deletedAt;
     
     // Getters and Setters
@@ -119,14 +120,6 @@ public class FutureLetter {
         this.deliveryMethod = deliveryMethod;
     }
     
-    public Date getScheduledDate() {
-        return scheduledDate;
-    }
-    
-    public void setScheduledDate(Date scheduledDate) {
-        this.scheduledDate = scheduledDate;
-    }
-    
     public Date getScheduledTime() {
         return scheduledTime;
     }
@@ -141,14 +134,6 @@ public class FutureLetter {
     
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
-    }
-    
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
     }
     
     public String getStatus() {

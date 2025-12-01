@@ -138,4 +138,17 @@ public class UserServiceImpl implements IUserService
     {
         return userMapper.deleteUserById(id);
     }
+
+    /**
+     * 更新用户头像
+     * 
+     * @param id 用户ID
+     * @param avatarUrl 头像URL
+     * @return 结果
+     */
+    @Override
+    public boolean updateUserAvatar(Long id, String avatarUrl)
+    {
+        return userMapper.updateUserAvatar(id, avatarUrl) > 0;
+    }
 }

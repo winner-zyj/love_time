@@ -2,6 +2,8 @@ package com.ruoyi.common.core.domain.lovetime;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * 情侣关系对象 at_couple_relationships
  * 
@@ -33,6 +35,7 @@ public class CoupleRelationship {
     private String relationshipName;
 
     /** 纪念日（恋爱开始日期） */
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date anniversaryDate;
 
     /** 绑定请求留言 */
@@ -42,18 +45,23 @@ public class CoupleRelationship {
     private Long coupleId;
 
     /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
 
     /** 确认绑定时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date confirmedAt;
 
     /** 拒绝时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date rejectedAt;
 
     /** 解绑时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date brokenAt;
 
     /** 更新时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updatedAt;
 
     public CoupleRelationship() {

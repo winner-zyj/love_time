@@ -1,5 +1,5 @@
 -- ----------------------------
--- Table structure for at_future_letter
+-- Table structure for at_future_letter (without updated_at field)
 -- ----------------------------
 DROP TABLE IF EXISTS `at_future_letter`;
 CREATE TABLE `at_future_letter` (
@@ -11,7 +11,6 @@ CREATE TABLE `at_future_letter` (
   `delivery_method` varchar(20) DEFAULT '情侣对方' COMMENT '发送方式：情侣对方',
   `scheduled_time` datetime DEFAULT NULL COMMENT '预计发送时间',
   `created_at` datetime DEFAULT NULL COMMENT '创建时间',
-  `updated_at` datetime DEFAULT NULL COMMENT '更新时间',
   `status` varchar(20) DEFAULT '草稿' COMMENT '状态：草稿/已安排/已发送/已读/已取消',
   `sent_at` datetime DEFAULT NULL COMMENT '实际发送时间',
   `read_at` datetime DEFAULT NULL COMMENT '阅读时间',

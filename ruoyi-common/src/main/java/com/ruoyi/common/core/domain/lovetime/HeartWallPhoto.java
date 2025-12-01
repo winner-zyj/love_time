@@ -2,6 +2,8 @@ package com.ruoyi.common.core.domain.lovetime;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * 心形墙照片实体类
  * 
@@ -31,12 +33,15 @@ public class HeartWallPhoto {
     private String caption;
     
     /** 拍摄日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date takenDate;
     
     /** 上传时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date uploadedAt;
     
     /** 更新时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updatedAt;
     
     // Getters and Setters
