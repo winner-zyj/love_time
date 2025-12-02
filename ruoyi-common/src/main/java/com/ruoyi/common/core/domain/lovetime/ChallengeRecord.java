@@ -2,6 +2,8 @@ package com.ruoyi.common.core.domain.lovetime;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * 用户挑战记录实体类
  * 
@@ -31,12 +33,15 @@ public class ChallengeRecord {
     private Boolean isFavorited;
     
     /** 完成时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date completedAt;
     
     /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createdAt;
     
     /** 更新时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updatedAt;
     
     // Getters and Setters

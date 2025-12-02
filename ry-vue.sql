@@ -320,13 +320,10 @@ CREATE TABLE `at_future_letter`  (
   `scheduled_time` time NOT NULL DEFAULT '00:00:00' COMMENT '预计发送时间',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `status` enum('DRAFT','SCHEDULED','SENT','READ','CANCELLED') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'SCHEDULED' COMMENT '状态：草稿/已安排/已发送/已读/已取消',
+  `status` enum('UNSCHEDULED','SENT','READ','UNREAD') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'UNSCHEDULED' COMMENT '状态：未发送/已发送/已读/未读',
   `sent_at` datetime NULL DEFAULT NULL COMMENT '实际发送时间',
   `read_at` datetime NULL DEFAULT NULL COMMENT '阅读时间',
   `background_image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '背景图片URL',
-  `background_opacity` decimal(3, 2) NULL DEFAULT 1.00 COMMENT '背景图片透明度 (0.0-1.0)',
-  `background_width` int NULL DEFAULT 300 COMMENT '背景图片宽度',
-  `background_height` int NULL DEFAULT 400 COMMENT '背景图片高度',
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否删除：0-否，1-是',
   `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
   PRIMARY KEY (`id`) USING BTREE,
@@ -337,7 +334,7 @@ CREATE TABLE `at_future_letter`  (
   INDEX `idx_created_at`(`created_at` ASC) USING BTREE,
   INDEX `idx_sender_status`(`sender_id` ASC, `status` ASC) USING BTREE,
   INDEX `idx_receiver_status`(`receiver_id` ASC, `status` ASC) USING BTREE,
-  INDEX `idx_background_props`(`background_opacity` ASC, `background_width` ASC, `background_height` ASC) USING BTREE,
+
   CONSTRAINT `at_future_letter_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `at_users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `at_future_letter_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `at_users` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '未来情书表' ROW_FORMAT = DYNAMIC;

@@ -67,7 +67,7 @@ public class FutureLetterServiceImpl implements IFutureLetterService {
     }
 
     /**
-     * 查询待发送的未来情书
+     * 查询待发送的未来情书（状态为UNSCHEDULED且sent_at为NULL的信件）
      * 
      * @return 待发送的未来情书集合
      */
@@ -87,7 +87,7 @@ public class FutureLetterServiceImpl implements IFutureLetterService {
         return futureLetterMapper.insertFutureLetter(futureLetter);
     }
 
-    /**
+        /**
      * 批量删除未来情书
      * 
      * @param ids 需要删除的未来情书ID

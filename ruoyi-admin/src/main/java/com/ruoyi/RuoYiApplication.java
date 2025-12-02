@@ -4,6 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
+import java.util.TimeZone;
+
 /**
  * 启动程序
  * 
@@ -14,6 +16,8 @@ public class RuoYiApplication
 {
     public static void main(String[] args)
     {
+        // 设置JVM默认时区为GMT+8
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT+8"));
         // System.setProperty("spring.devtools.restart.enabled", "false");
         SpringApplication.run(RuoYiApplication.class, args);
         System.out.println("(♥◠‿◠)ﾉﾞ  若依启动成功   ლ(´ڡ`ლ)ﾞ  \n" +

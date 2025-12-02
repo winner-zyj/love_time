@@ -208,16 +208,20 @@ public class FutureLetterController {
             
             List<FutureLetter> allLetters = futureLetterService.selectFutureLetterList(query);
             
-            long totalDraft = allLetters.stream()
-                .filter(letter -> "DRAFT".equals(letter.getStatus()))
-                .count();
-                
-            long totalScheduled = allLetters.stream()
-                .filter(letter -> "SCHEDULED".equals(letter.getStatus()))
+            long totalUnscheduled = allLetters.stream()
+                .filter(letter -> "UNSCHEDULED".equals(letter.getStatus()))
                 .count();
                 
             long totalSent = allLetters.stream()
                 .filter(letter -> "SENT".equals(letter.getStatus()))
+                .count();
+                
+            long totalRead = allLetters.stream()
+                .filter(letter -> "READ".equals(letter.getStatus()))
+                .count();
+                
+            long totalUnread = allLetters.stream()
+                .filter(letter -> "UNREAD".equals(letter.getStatus()))
                 .count();
             
             List<FutureLetter> receivedLetters = futureLetterService.selectFutureLettersByReceiverId(
@@ -226,9 +230,10 @@ public class FutureLetterController {
             
             // 构造返回数据
             Map<String, Object> result = new HashMap<>();
-            result.put("totalDraft", totalDraft);
-            result.put("totalScheduled", totalScheduled);
+            result.put("totalUnscheduled", totalUnscheduled);
             result.put("totalSent", totalSent);
+            result.put("totalRead", totalRead);
+            result.put("totalUnread", totalUnread);
             result.put("totalReceived", totalReceived);
             
             return AjaxResult.success(result);
@@ -267,7 +272,7 @@ public class FutureLetterController {
             
             // 设置默认状态
             if (letter.getStatus() == null || letter.getStatus().isEmpty()) {
-                letter.setStatus("SCHEDULED");
+                letter.setStatus("UNSCHEDULED");
             }
             
             // 设置创建时间
@@ -305,7 +310,7 @@ public class FutureLetterController {
                 return AjaxResult.error("无权限删除该情书");
             }
             
-            // 验证状态，只有草稿或未发送的情书可以删除
+            // 验证状态，只有未发送的情书可以删除
             if ("SENT".equals(existingLetter.getStatus())) {
                 return AjaxResult.error("已发送的情书不能删除");
             }
@@ -350,18 +355,11 @@ public class FutureLetterController {
             
             // 更新状态为已发送
             existingLetter.setStatus("SENT");
-            // 确保 sent_at 和 scheduled_time 保持一致
-            existingLetter.setSentAt(existingLetter.getScheduledTime());
+            // 设置发送时间为当前时间
+            existingLetter.setSentAt(new Date());
             
             // 不再支持更新功能
             return AjaxResult.error("更新功能已禁用");
-            
-            // 构造返回数据
-            Map<String, Object> result = new HashMap<>();
-            result.put("status", "SENT");
-            result.put("sentAt", existingLetter.getSentAt());
-            
-            return AjaxResult.success("发送成功", result);
         } catch (Exception e) {
             return AjaxResult.error("发送情书失败: " + e.getMessage());
         }
@@ -409,18 +407,10 @@ public class FutureLetterController {
                 }
             }
             
-            existingLetter.setStatus("SCHEDULED");
+            existingLetter.setStatus("UNSCHEDULED");
             
             // 不再支持更新功能
             return AjaxResult.error("更新功能已禁用");
-            
-            // 构造返回数据
-            Map<String, Object> result = new HashMap<>();
-            result.put("id", existingLetter.getId());
-            result.put("scheduleTime", existingLetter.getScheduledTime());
-            result.put("status", "SCHEDULED");
-            
-            return AjaxResult.success("定时发送配置更新成功", result);
         } catch (Exception e) {
             return AjaxResult.error("更新定时发送配置失败: " + e.getMessage());
         }
@@ -481,16 +471,45 @@ public class FutureLetterController {
             
             // 查询用户收到的未读情书列表（状态为已发送但未读）
             List<FutureLetter> letters = futureLetterService.selectFutureLettersByReceiverId(
-                loginUser.getUserId(), "已发送");
+                loginUser.getUserId(), "UNREAD");
             
-            // 过滤出未读的情书
-            List<FutureLetter> unreadLetters = letters.stream()
-                .filter(letter -> letter.getReadAt() == null)
-                .collect(java.util.stream.Collectors.toList());
-            
-            return AjaxResult.success("获取未读情书成功").put("letters", unreadLetters);
+            return AjaxResult.success("获取未读情书成功").put("letters", letters);
         } catch (Exception e) {
             return AjaxResult.error("获取未读情书失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 标记情书为已读
+     */
+    @PostMapping("/{id}/read")
+    public AjaxResult markLetterAsRead(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            // 获取当前登录用户
+            LoginUser loginUser = tokenService.getLoginUser(request);
+            if (loginUser == null) {
+                return AjaxResult.error("用户未登录");
+            }
+            
+            // 查询情书
+            FutureLetter letter = futureLetterService.selectFutureLetterById(id);
+            if (letter == null) {
+                return AjaxResult.error("情书不存在");
+            }
+            
+            // 验证用户权限（必须是接收者）
+            if (!letter.getReceiverId().equals(loginUser.getUserId())) {
+                return AjaxResult.error("无权限标记该情书为已读");
+            }
+            
+            // 更新状态为已读
+            letter.setStatus("READ");
+            letter.setReadAt(new Date());
+            
+            // 不再支持更新功能
+            return AjaxResult.error("更新功能已禁用");
+        } catch (Exception e) {
+            return AjaxResult.error("标记情书为已读失败: " + e.getMessage());
         }
     }
 }

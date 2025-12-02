@@ -53,7 +53,7 @@ public interface FutureLetterMapper {
      */
     public int insertFutureLetter(FutureLetter futureLetter);
     
-    /**
+        /**
      * 删除未来情书
      * 
      * @param id 未来情书ID
@@ -70,7 +70,7 @@ public interface FutureLetterMapper {
     public int deleteFutureLetterByIds(Long[] ids);
     
     /**
-     * 查询待发送的未来情书
+     * 查询待发送的未来情书（状态为UNSCHEDULED且sent_at为NULL的信件）
      * 
      * @return 待发送的未来情书集合
      */

@@ -30,35 +30,26 @@ public class FutureLetter {
     private String deliveryMethod;
     
     /** 预计发送时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date scheduledTime;
     
     /** 创建时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createdAt;
     
-    /** 状态：草稿/已安排/已发送/已读/已取消 */
+    /** 状态：已发送/未发送/已读/未读 */
     private String status;
     
     /** 实际发送时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date sentAt;
     
     /** 阅读时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date readAt;
     
     /** 背景图片URL */
     private String backgroundImage;
-    
-    /** 背景图片透明度 (0.0-1.0) */
-    private Double backgroundOpacity;
-    
-    /** 背景图片宽度 */
-    private Integer backgroundWidth;
-    
-    /** 背景图片高度 */
-    private Integer backgroundHeight;
     
     /** 字体样式 */
     private String fontStyle;
@@ -67,7 +58,7 @@ public class FutureLetter {
     private Boolean isDeleted;
     
     /** 删除时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date deletedAt;
     
     // Getters and Setters
@@ -166,30 +157,6 @@ public class FutureLetter {
     
     public void setBackgroundImage(String backgroundImage) {
         this.backgroundImage = backgroundImage;
-    }
-    
-    public Double getBackgroundOpacity() {
-        return backgroundOpacity;
-    }
-    
-    public void setBackgroundOpacity(Double backgroundOpacity) {
-        this.backgroundOpacity = backgroundOpacity;
-    }
-    
-    public Integer getBackgroundWidth() {
-        return backgroundWidth;
-    }
-    
-    public void setBackgroundWidth(Integer backgroundWidth) {
-        this.backgroundWidth = backgroundWidth;
-    }
-    
-    public Integer getBackgroundHeight() {
-        return backgroundHeight;
-    }
-    
-    public void setBackgroundHeight(Integer backgroundHeight) {
-        this.backgroundHeight = backgroundHeight;
     }
     
     public String getFontStyle() {
