@@ -1,3 +1,11 @@
+# 开发环境配置
+ruoyi:
+  # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
+  profile: D:/ruoyi/uploadPath
+
+server:
+  port: 8886
+
 # 开发环境微信配置
 wechat:
   appid: wx99ff5431b615a046

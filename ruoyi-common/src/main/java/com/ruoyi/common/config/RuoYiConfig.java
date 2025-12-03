@@ -23,6 +23,12 @@ public class RuoYiConfig
 
     /** 上传路径 */
     private static String profile;
+    
+    /** 生产环境域名 */
+    private static String prodDomain = "smallpeppers.cn";
+    
+    /** 是否为生产环境 */
+    private static boolean prodEnv = false;
 
     /** 获取地址开关 */
     private static boolean addressEnabled;
@@ -68,6 +74,26 @@ public class RuoYiConfig
     public void setProfile(String profile)
     {
         RuoYiConfig.profile = profile;
+    }
+    
+    public static String getProdDomain()
+    {
+        return prodDomain;
+    }
+    
+    public void setProdDomain(String prodDomain)
+    {
+        RuoYiConfig.prodDomain = prodDomain;
+    }
+    
+    public static boolean isProdEnv()
+    {
+        return prodEnv;
+    }
+    
+    public void setProdEnv(boolean prodEnv)
+    {
+        RuoYiConfig.prodEnv = prodEnv;
     }
 
     public static boolean isAddressEnabled()

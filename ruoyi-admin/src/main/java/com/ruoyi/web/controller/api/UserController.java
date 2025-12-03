@@ -153,22 +153,37 @@ public class UserController extends BaseController {
      * @return 完整的头像访问URL
      */
     private String buildAvatarUrl(HttpServletRequest request, String fileName) {
-        // 1. 获取协议（http/https）
-        String scheme = request.getScheme();
-        // 2. 获取域名或 IP（如 "smallpeppers.cn" 或 "192.168.1.100"）
-        String serverName = request.getServerName();
-        // 3. 获取端口（如 80、443、8886）
+        String scheme;
+        String serverName;
         int serverPort = request.getServerPort();
-        // 4. 获取项目上下文路径（若依项目默认部署在根目录，此值为空）
+        
+        // 根据环境配置选择协议和主机名
+        if (RuoYiConfig.isProdEnv()) {
+            // 生产环境使用HTTPS和配置的域名
+            scheme = "https";
+            serverName = RuoYiConfig.getProdDomain();
+            // 生产环境不使用端口号
+            serverPort = 443;
+        } else {
+            // 开发环境使用HTTP和服务器IP
+            scheme = "http";
+            serverName = request.getServerName();
+            // 开发环境保留原有端口逻辑
+            serverPort = request.getServerPort();
+        }
+        
+        // 获取项目上下文路径（若依项目默认部署在根目录，此值为空）
         String contextPath = request.getContextPath();
 
-        // 5. 拼接 URL（格式：协议://域名:端口/上下文路径/图片相对路径）
+        // 拼接 URL（格式：协议://域名:端口/上下文路径/图片相对路径）
         StringBuilder url = new StringBuilder();
         url.append(scheme).append("://").append(serverName);
-        // 只有非默认端口（80 或 443）才需要拼接端口号
+        
+        // 只有非默认端口才需要拼接端口号
         if ((scheme.equals("http") && serverPort != 80) || (scheme.equals("https") && serverPort != 443)) {
             url.append(":").append(serverPort);
         }
+        
         url.append(contextPath)
                 .append("/profile/") // 与上传目录对应（若依默认/profile是静态资源前缀）
                 .append(fileName);

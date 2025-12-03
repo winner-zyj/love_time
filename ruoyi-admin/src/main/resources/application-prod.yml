@@ -1,0 +1,12 @@
+# 生产环境配置
+ruoyi:
+  # 生产环境域名
+  prodDomain: smallpeppers.cn
+  # 是否为生产环境
+  prodEnv: true
+  # 文件路径
+  profile: /usr/local/lovetime/upload
+
+# 服务器配置
+server:
+  port: 443
