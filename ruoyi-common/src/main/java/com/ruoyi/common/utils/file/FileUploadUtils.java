@@ -173,8 +173,12 @@ public class FileUploadUtils
         String profilePath = RuoYiConfig.getProfile();
         String currentDir = "";
         
+        // 如果profilePath为null，直接使用uploadDir
+        if (profilePath == null) {
+            currentDir = uploadDir;
+        } 
         // 如果uploadDir以profilePath开头，则截取相对路径
-        if (uploadDir.startsWith(profilePath)) {
+        else if (uploadDir.startsWith(profilePath)) {
             int dirLastIndex = profilePath.length();
             if (uploadDir.length() > dirLastIndex) {
                 // 确保路径分隔符正确处理
@@ -184,14 +188,35 @@ public class FileUploadUtils
                 currentDir = StringUtils.substring(uploadDir, dirLastIndex);
             }
         } else {
-            // 如果不以profilePath开头，直接使用uploadDir
-            currentDir = uploadDir;
+            // 如果不以profilePath开头，尝试从uploadDir中移除profilePath部分
+            // 这是为了处理可能的路径格式不匹配问题
+            if (profilePath != null && profilePath.length() > 0) {
+                // 尝试查找profilePath在uploadDir中的位置
+                int profileIndex = uploadDir.indexOf(profilePath);
+                if (profileIndex >= 0) {
+                    int endIndex = profileIndex + profilePath.length();
+                    if (endIndex < uploadDir.length()) {
+                        // 确保路径分隔符正确处理
+                        if (uploadDir.charAt(endIndex) == '/' || uploadDir.charAt(endIndex) == '\\') {
+                            endIndex++;
+                        }
+                        currentDir = StringUtils.substring(uploadDir, endIndex);
+                    }
+                } else {
+                    // 如果找不到profilePath，使用相对于profilePath的路径
+                    currentDir = uploadDir.replace(profilePath, "").replace("\\", "/").replaceAll("^/+", "");
+                }
+            } else {
+                // 如果profilePath为空或null，直接使用uploadDir
+                currentDir = uploadDir;
+            }
         }
         
         // 确保路径分隔符统一
         if (StringUtils.isNotEmpty(currentDir)) {
             currentDir = currentDir.replace("\\", "/");
-            // 不再添加尾部斜杠，避免路径重复
+            // 移除开头的斜杠，避免路径重复
+            currentDir = currentDir.replaceAll("^/+", "");
         }
         
         // 确保fileName路径分隔符统一
@@ -202,7 +227,8 @@ public class FileUploadUtils
         if (StringUtils.isNotEmpty(currentDir)) {
             return currentDir + "/" + normalizedFileName;
         } else {
-            return normalizedFileName;
+            // 当currentDir为空时，直接返回normalizedFileName，但要确保它不以/开头
+            return normalizedFileName.replaceAll("^/+", "");
         }
     }
 

@@ -339,6 +339,7 @@ public class ChallengeController {
     /**
      * 上传挑战任务照片
      */
+    @Anonymous
     @PostMapping("/upload")
     public AjaxResult uploadPhoto(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         try {
@@ -364,12 +365,15 @@ public class ChallengeController {
 
             // 上传文件路径 - 使用挑战任务专用路径
             String filePath = RuoYiConfig.getProfile() + "/uploads/challenge";
+            logger.info("Upload file path: {}", filePath);
 
             // 使用若依框架的文件上传工具上传文件
             String fileName = FileUploadUtils.upload(filePath, file, allowedExtension, true);
+            logger.info("Uploaded file name: {}", fileName);
 
             // 构造返回数据 - 返回完整的URL路径
             String fullImageUrl = buildFullImageUrl(request, fileName);
+            logger.info("Full image URL: {}", fullImageUrl);
             AjaxResult ajax = AjaxResult.success("照片上传成功");
             ajax.put("photoUrl", fullImageUrl);
             
@@ -415,6 +419,9 @@ public class ChallengeController {
         
         // 获取项目上下文路径（若依项目默认部署在根目录，此值为空）
         String contextPath = request.getContextPath();
+        if (contextPath == null) {
+            contextPath = "";
+        }
 
         // 拼接 URL（格式：协议://域名:端口/上下文路径/图片相对路径）
         StringBuilder url = new StringBuilder();
