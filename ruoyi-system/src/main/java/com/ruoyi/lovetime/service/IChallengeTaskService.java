@@ -35,6 +35,14 @@ public interface IChallengeTaskService {
     public List<ChallengeTask> selectAllChallengeTasks(Long userId);
     
     /**
+     * 查询情侣双方的所有任务列表（预设按taskIndex升序，自定义按创建时间倒序）
+     * 
+     * @param userIds 用户ID列表
+     * @return 挑战任务集合
+     */
+    public List<ChallengeTask> selectAllChallengeTasksByUserIds(List<Long> userIds);
+    
+    /**
      * 新增挑战任务
      * 
      * @param challengeTask 挑战任务

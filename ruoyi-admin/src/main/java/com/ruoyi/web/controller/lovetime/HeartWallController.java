@@ -58,6 +58,31 @@ public class HeartWallController {
     private TokenService tokenService;
     
     /**
+     * 检查用户是否有权限访问项目
+     * 
+     * @param userId 当前用户ID
+     * @param project 项目对象
+     * @return 是否有权限
+     */
+    private boolean isUserAuthorizedForProject(Long userId, HeartWallProject project) {
+        // 用户本人可以直接访问
+        if (project.getUserId().equals(userId)) {
+            return true;
+        }
+        
+        // 检查是否为情侣关系
+        CoupleRelationship relationship = coupleRelationshipService.selectCoupleRelationshipByUserId(userId);
+        if (relationship != null && "active".equals(relationship.getStatus())) {
+            // 如果是情侣关系，检查项目是否属于情侣
+            Long partnerId = relationship.getUser1Id().equals(userId) ? 
+                relationship.getUser2Id() : relationship.getUser1Id();
+            return project.getUserId().equals(partnerId);
+        }
+        
+        return false;
+    }
+    
+    /**
      * 创建项目
      */
     @PostMapping("/projects")
@@ -150,8 +175,8 @@ public class HeartWallController {
                 return AjaxResult.error("项目不存在");
             }
             
-            // 验证用户权限（只能查看自己的项目）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
+            // 验证用户权限（用户本人或其情侣都可以访问项目）
+            if (!isUserAuthorizedForProject(loginUser.getUserId(), project)) {
                 return AjaxResult.error("无权限访问该项目");
             }
             
@@ -198,8 +223,8 @@ public class HeartWallController {
                 return AjaxResult.error("项目不存在");
             }
             
-            // 验证用户权限（只能更新自己的项目）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
+            // 验证用户权限（用户本人或其情侣都可以更新项目）
+            if (!isUserAuthorizedForProject(loginUser.getUserId(), project)) {
                 return AjaxResult.error("无权限更新该项目");
             }
             
@@ -260,8 +285,8 @@ public class HeartWallController {
                 return AjaxResult.error("项目不存在");
             }
             
-            // 验证用户权限（只能删除自己的项目）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
+            // 验证用户权限（用户本人或其情侣都可以删除项目）
+            if (!isUserAuthorizedForProject(loginUser.getUserId(), project)) {
                 return AjaxResult.error("无权限删除该项目");
             }
             
@@ -299,8 +324,8 @@ public class HeartWallController {
                 return AjaxResult.error("项目不存在");
             }
             
-            // 验证用户权限（只能清空自己项目中的照片）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
+            // 验证用户权限（用户本人或其情侣都可以清空项目中的照片）
+            if (!isUserAuthorizedForProject(loginUser.getUserId(), project)) {
                 return AjaxResult.error("无权限清空该项目的照片");
             }
             
@@ -483,8 +508,8 @@ public class HeartWallController {
                 return AjaxResult.error("项目不存在");
             }
 
-            // 验证用户权限（只能在自己的项目中上传照片）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
+            // 验证用户权限（用户本人或其情侣都可以在项目中上传照片）
+            if (!isUserAuthorizedForProject(loginUser.getUserId(), project)) {
                 return AjaxResult.error("无权限在该项目中上传照片");
             }
 
@@ -646,8 +671,8 @@ public class HeartWallController {
                 return AjaxResult.error("项目不存在");
             }
             
-            // 验证用户权限（只能删除自己项目中的照片）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
+            // 验证用户权限（用户本人或其情侣都可以删除项目中的照片）
+            if (!isUserAuthorizedForProject(loginUser.getUserId(), project)) {
                 return AjaxResult.error("无权限删除该照片");
             }
             
@@ -707,8 +732,8 @@ public class HeartWallController {
                 return AjaxResult.error("项目不存在");
             }
             
-            // 验证用户权限（只能更新自己项目中的照片）
-            if (!project.getUserId().equals(loginUser.getUserId())) {
+            // 验证用户权限（用户本人或其情侣都可以更新项目中的照片）
+            if (!isUserAuthorizedForProject(loginUser.getUserId(), project)) {
                 return AjaxResult.error("无权限更新该照片");
             }
             

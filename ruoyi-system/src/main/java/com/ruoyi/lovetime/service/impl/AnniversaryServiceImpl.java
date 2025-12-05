@@ -43,6 +43,17 @@ public class AnniversaryServiceImpl implements IAnniversaryService {
     }
     
     /**
+     * 根据用户ID列表查询纪念日列表
+     * 
+     * @param userIds 用户ID列表
+     * @return 纪念日集合
+     */
+    @Override
+    public List<Anniversary> selectAnniversaryListByUserIds(List<Long> userIds) {
+        return anniversaryMapper.selectAnniversaryListByUserIds(userIds);
+    }
+    
+    /**
      * 新增纪念日
      * 
      * @param anniversary 纪念日

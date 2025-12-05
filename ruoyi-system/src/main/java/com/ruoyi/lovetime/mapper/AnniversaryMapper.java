@@ -29,6 +29,14 @@ public interface AnniversaryMapper {
     public List<Anniversary> selectAnniversaryListByUserId(Long userId);
     
     /**
+     * 根据用户ID列表查询纪念日列表
+     * 
+     * @param userIds 用户ID列表
+     * @return 纪念日集合
+     */
+    public List<Anniversary> selectAnniversaryListByUserIds(@Param("userIds") List<Long> userIds);
+    
+    /**
      * 新增纪念日
      * 
      * @param anniversary 纪念日

@@ -50,6 +50,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by created_at desc
     </select>
     
+    <select id="selectCustomChallengeTasksByUserIds" resultMap="ChallengeTaskResult">
+        select id, task_name, task_description, task_index, category, created_by, icon_url, is_active, created_at, updated_at
+        from at_challenge_tasks 
+        where category = 'custom' 
+        and created_by in
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        and is_active = 1 
+        order by created_at desc
+    </select>
+    
     <select id="selectChallengeTaskById" parameterType="Long" resultMap="ChallengeTaskResult">
         <include refid="selectChallengeTaskVo"/>
         where id = #{id}

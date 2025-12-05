@@ -1,6 +1,7 @@
 package com.ruoyi.web.controller.lovetime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,7 @@ public class ChallengeController {
     private ServerConfig serverConfig;
 
     /**
-     * 获取任务列表
+     * 获取任务列表（包括情侣双方的任务）
      */
     @GetMapping("/tasks")
     public AjaxResult getTasks(HttpServletRequest request) {
@@ -89,8 +90,24 @@ public class ChallengeController {
                 return AjaxResult.error("用户未登录");
             }
             
-            // 查询所有任务（预设按taskIndex升序，自定义按创建时间倒序）
-            List<ChallengeTask> tasks = challengeTaskService.selectAllChallengeTasks(loginUser.getUserId());
+            // 查询用户的情侣关系
+            CoupleRelationship relationship = coupleRelationshipService.selectCoupleRelationshipByUserId(loginUser.getUserId());
+            
+            List<ChallengeTask> tasks;
+            // 如果存在情侣关系且关系已激活，则获取双方的任务
+            if (relationship != null && "active".equals(relationship.getStatus())) {
+                // 获取当前用户和伴侣的ID列表
+                List<Long> userIds = Arrays.asList(
+                    loginUser.getUserId(),
+                    loginUser.getUserId().equals(relationship.getUser1Id()) ? relationship.getUser2Id() : relationship.getUser1Id()
+                );
+                
+                // 获取双方的所有任务
+                tasks = challengeTaskService.selectAllChallengeTasksByUserIds(userIds);
+            } else {
+                // 否则只获取用户自己的任务
+                tasks = challengeTaskService.selectAllChallengeTasks(loginUser.getUserId());
+            }
             
             // 为每个任务添加用户记录信息
             List<Map<String, Object>> taskWithRecords = new ArrayList<>();

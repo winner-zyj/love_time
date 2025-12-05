@@ -26,6 +26,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by date desc
     </select>
     
+    <select id="selectAnniversaryListByUserIds" resultMap="AnniversaryResult">
+        <include refid="selectAnniversaryVo"/>
+        where user_id in
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        order by date desc
+    </select>
+    
     <select id="selectAnniversaryById" parameterType="Long" resultMap="AnniversaryResult">
         <include refid="selectAnniversaryVo"/>
         where id = #{id}

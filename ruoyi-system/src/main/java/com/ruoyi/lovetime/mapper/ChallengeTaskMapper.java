@@ -35,6 +35,14 @@ public interface ChallengeTaskMapper {
     public List<ChallengeTask> selectCustomChallengeTasksByUserId(@Param("userId") Long userId);
     
     /**
+     * 根据用户ID列表查询用户自定义挑战任务列表（按创建时间倒序）
+     * 
+     * @param userIds 用户ID列表
+     * @return 挑战任务集合
+     */
+    public List<ChallengeTask> selectCustomChallengeTasksByUserIds(@Param("userIds") List<Long> userIds);
+    
+    /**
      * 根据ID查询挑战任务
      * 
      * @param id 挑战任务ID

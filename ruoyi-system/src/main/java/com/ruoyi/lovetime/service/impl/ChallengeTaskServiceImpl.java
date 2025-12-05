@@ -63,6 +63,26 @@ public class ChallengeTaskServiceImpl implements IChallengeTaskService {
     }
     
     /**
+     * 查询情侣双方的所有任务列表（预设按taskIndex升序，自定义按创建时间倒序）
+     * 
+     * @param userIds 用户ID列表
+     * @return 挑战任务集合
+     */
+    @Override
+    public List<ChallengeTask> selectAllChallengeTasksByUserIds(List<Long> userIds) {
+        // 查询预设任务（按taskIndex升序）
+        List<ChallengeTask> presetTasks = challengeTaskMapper.selectPresetChallengeTasks();
+        
+        // 查询用户自定义任务（按创建时间倒序）
+        List<ChallengeTask> customTasks = challengeTaskMapper.selectCustomChallengeTasksByUserIds(userIds);
+        
+        // 合并两个列表
+        presetTasks.addAll(customTasks);
+        
+        return presetTasks;
+    }
+    
+    /**
      * 新增挑战任务
      * 
      * @param challengeTask 挑战任务

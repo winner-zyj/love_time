@@ -2,6 +2,7 @@ package com.ruoyi.web.controller.lovetime;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 // Removed PreAuthorize import
 import org.springframework.web.bind.annotation.*;
@@ -9,8 +10,10 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.lovetime.Anniversary;
+import com.ruoyi.common.core.domain.lovetime.CoupleRelationship;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.lovetime.service.IAnniversaryService;
+import com.ruoyi.lovetime.service.ICoupleRelationshipService;
 
 /**
  * 纪念日Controller
@@ -25,6 +28,9 @@ public class AnniversaryController extends BaseController {
     @Autowired
     private IAnniversaryService anniversaryService;
     
+    @Autowired
+    private ICoupleRelationshipService coupleRelationshipService;
+    
     /**
      * 获取用户的纪念日列表
      */
@@ -32,7 +38,26 @@ public class AnniversaryController extends BaseController {
     public AjaxResult list() {
         try {
             Long userId = getUserId();
-            List<Anniversary> anniversaryList = anniversaryService.selectAnniversaryListByUserId(userId);
+            
+            // 获取用户的情侣关系
+            CoupleRelationship relationship = coupleRelationshipService.selectCoupleRelationshipByUserId(userId);
+            
+            List<Anniversary> anniversaryList;
+            if (relationship != null && "active".equals(relationship.getStatus())) {
+                // 如果用户已绑定情侣，则获取双方的纪念日
+                Long partnerId = relationship.getUser1Id().equals(userId) ? 
+                    relationship.getUser2Id() : relationship.getUser1Id();
+                
+                // 创建用户ID列表
+                List<Long> userIds = Arrays.asList(userId, partnerId);
+                
+                // 查询双方的纪念日
+                anniversaryList = anniversaryService.selectAnniversaryListByUserIds(userIds);
+            } else {
+                // 如果用户未绑定情侣，则只获取自己的纪念日
+                anniversaryList = anniversaryService.selectAnniversaryListByUserId(userId);
+            }
+            
             return success("获取纪念日列表成功").put("anniversaryList", anniversaryList);
         } catch (Exception e) {
             return error("获取纪念日列表失败: " + e.getMessage());
