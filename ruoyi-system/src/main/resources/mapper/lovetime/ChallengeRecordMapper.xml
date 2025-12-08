@@ -11,6 +11,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="status" column="status"/>
         <result property="photoUrl" column="photo_url"/>
         <result property="note" column="note"/>
+        <result property="location" column="location"/>
+        <result property="completedDate" column="completed_date"/>
+        <result property="completedTime" column="completed_time"/>
+        <result property="weather" column="weather"/>
+        <result property="feeling" column="feeling"/>
         <result property="isFavorited" column="is_favorited"/>
         <result property="completedAt" column="completed_at"/>
         <result property="createdAt" column="created_at"/>
@@ -18,7 +23,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
     
     <sql id="selectChallengeRecordVo">
-        select id, task_id, user_id, status, photo_url, note, is_favorited, completed_at, created_at, updated_at from at_challenge_records
+        select id, task_id, user_id, status, photo_url, note, location, completed_date, completed_time, weather, feeling, is_favorited, completed_at, created_at, updated_at from at_challenge_records
     </sql>
     
     <select id="selectChallengeRecordList" parameterType="ChallengeRecord" resultMap="ChallengeRecordResult">
@@ -50,6 +55,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null and status != ''">status,</if>
             <if test="photoUrl != null">photo_url,</if>
             <if test="note != null">note,</if>
+            <if test="location != null">location,</if>
+            <if test="completedDate != null">completed_date,</if>
+            <if test="completedTime != null">completed_time,</if>
+            <if test="weather != null">weather,</if>
+            <if test="feeling != null">feeling,</if>
             <if test="isFavorited != null">is_favorited,</if>
             <if test="completedAt != null">completed_at,</if>
             <if test="createdAt != null">created_at,</if>
@@ -61,6 +71,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null and status != ''">#{status},</if>
             <if test="photoUrl != null">#{photoUrl},</if>
             <if test="note != null">#{note},</if>
+            <if test="location != null">#{location},</if>
+            <if test="completedDate != null">#{completedDate},</if>
+            <if test="completedTime != null">#{completedTime},</if>
+            <if test="weather != null">#{weather},</if>
+            <if test="feeling != null">#{feeling},</if>
             <if test="isFavorited != null">#{isFavorited},</if>
             <if test="completedAt != null">#{completedAt},</if>
             <if test="createdAt != null">#{createdAt},</if>
@@ -76,6 +91,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="photoUrl != null">photo_url = #{photoUrl},</if>
             <if test="note != null">note = #{note},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="completedDate != null">completed_date = #{completedDate},</if>
+            <if test="completedTime != null">completed_time = #{completedTime},</if>
+            <if test="weather != null">weather = #{weather},</if>
+            <if test="feeling != null">feeling = #{feeling},</if>
             <if test="isFavorited != null">is_favorited = #{isFavorited},</if>
             <if test="completedAt != null">completed_at = #{completedAt},</if>
             <if test="createdAt != null">created_at = #{createdAt},</if>

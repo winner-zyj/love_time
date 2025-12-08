@@ -35,6 +35,14 @@ public interface IHeartWallProjectService {
     public List<HeartWallProject> selectHeartWallProjectsByUserId(Long userId);
     
     /**
+     * 查询用户及其情侣的心形墙项目列表
+     * 
+     * @param userIds 用户ID列表
+     * @return 心形墙项目集合
+     */
+    public List<HeartWallProject> selectHeartWallProjectsByUserOrPartnerId(List<Long> userIds);
+    
+    /**
      * 新增心形墙项目
      * 
      * @param heartWallProject 心形墙项目

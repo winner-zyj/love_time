@@ -29,6 +29,23 @@ public class ChallengeRecord {
     /** 备注说明 */
     private String note;
     
+    /** 完成地点 */
+    private String location;
+    
+    /** 完成日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date completedDate;
+    
+    /** 完成时间 */
+    @JsonFormat(pattern = "HH:mm")
+    private Date completedTime;
+    
+    /** 完成时的天气 */
+    private String weather;
+    
+    /** 完成时的感受 */
+    private String feeling;
+    
     /** 是否收藏 */
     private Boolean isFavorited;
     
@@ -94,6 +111,46 @@ public class ChallengeRecord {
         this.note = note;
     }
     
+    public String getLocation() {
+        return location;
+    }
+    
+    public void setLocation(String location) {
+        this.location = location;
+    }
+    
+    public Date getCompletedDate() {
+        return completedDate;
+    }
+    
+    public void setCompletedDate(Date completedDate) {
+        this.completedDate = completedDate;
+    }
+    
+    public Date getCompletedTime() {
+        return completedTime;
+    }
+    
+    public void setCompletedTime(Date completedTime) {
+        this.completedTime = completedTime;
+    }
+    
+    public String getWeather() {
+        return weather;
+    }
+    
+    public void setWeather(String weather) {
+        this.weather = weather;
+    }
+    
+    public String getFeeling() {
+        return feeling;
+    }
+    
+    public void setFeeling(String feeling) {
+        this.feeling = feeling;
+    }
+    
     public Boolean getIsFavorited() {
         return isFavorited;
     }
@@ -124,5 +181,26 @@ public class ChallengeRecord {
     
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    @Override
+    public String toString() {
+        return "ChallengeRecord{" +
+                "id=" + id +
+                ", taskId=" + taskId +
+                ", userId=" + userId +
+                ", status='" + status + '\'' +
+                ", photoUrl='" + photoUrl + '\'' +
+                ", note='" + note + '\'' +
+                ", location='" + location + '\'' +
+                ", completedDate=" + completedDate +
+                ", completedTime=" + completedTime +
+                ", weather='" + weather + '\'' +
+                ", feeling='" + feeling + '\'' +
+                ", isFavorited=" + isFavorited +
+                ", completedAt=" + completedAt +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }

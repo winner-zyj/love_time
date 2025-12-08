@@ -1,5 +1,6 @@
 package com.ruoyi.web.controller.lovetime;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -142,8 +143,21 @@ public class HeartWallController {
                 return AjaxResult.error("用户未登录");
             }
             
-            // 查询用户的心形墙项目列表
-            List<HeartWallProject> projects = heartWallProjectService.selectHeartWallProjectsByUserId(loginUser.getUserId());
+            // 创建用户ID列表，包含当前用户和其情侣（如果有）
+            List<Long> userIds = new ArrayList<>();
+            userIds.add(loginUser.getUserId());
+            
+            // 查询用户的情侣关系
+            CoupleRelationship relationship = coupleRelationshipService.selectCoupleRelationshipByUserId(loginUser.getUserId());
+            if (relationship != null && "active".equals(relationship.getStatus())) {
+                // 如果用户有情侣关系，添加情侣的用户ID
+                Long partnerId = relationship.getUser1Id().equals(loginUser.getUserId()) ? 
+                    relationship.getUser2Id() : relationship.getUser1Id();
+                userIds.add(partnerId);
+            }
+            
+            // 查询用户及其情侣的心形墙项目列表
+            List<HeartWallProject> projects = heartWallProjectService.selectHeartWallProjectsByUserOrPartnerId(userIds);
             
             // 为每个项目动态计算照片数量
             for (HeartWallProject project : projects) {

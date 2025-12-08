@@ -10,6 +10,10 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,6 +63,17 @@ import com.ruoyi.framework.config.ServerConfig;
 public class ChallengeController {
     
     private static final Logger logger = LoggerFactory.getLogger(ChallengeController.class);
+    
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
+    private static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    
+    static {
+        // 设置时区为中国时区
+        DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        DATETIME_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+    }
     
     @Autowired
     private IChallengeTaskService challengeTaskService;
@@ -121,8 +136,8 @@ public class ChallengeController {
                 taskInfo.put("createdBy", task.getCreatedBy());
                 taskInfo.put("iconUrl", task.getIconUrl());
                 taskInfo.put("isActive", task.getIsActive());
-                taskInfo.put("createdAt", task.getCreatedAt());
-                taskInfo.put("updatedAt", task.getUpdatedAt());
+                taskInfo.put("createdAt", formatDateSafely(task.getCreatedAt(), DATETIME_FORMAT));
+                taskInfo.put("updatedAt", formatDateSafely(task.getUpdatedAt(), DATETIME_FORMAT));
                 
                 // 获取用户对该任务的记录
                 ChallengeRecord record = challengeRecordService.selectChallengeRecordByUserAndTask(
@@ -135,10 +150,15 @@ public class ChallengeController {
                     recordInfo.put("photoUrl", record.getPhotoUrl() != null ? 
                         buildFullImageUrl(request, record.getPhotoUrl()) : null);
                     recordInfo.put("note", record.getNote());
+                    recordInfo.put("location", record.getLocation());
+                    recordInfo.put("completedDate", formatDateSafely(record.getCompletedDate(), DATE_FORMAT));
+                    recordInfo.put("completedTime", formatDateSafely(record.getCompletedTime(), TIME_FORMAT));
+                    recordInfo.put("weather", record.getWeather());
+                    recordInfo.put("feeling", record.getFeeling());
                     recordInfo.put("isFavorited", record.getIsFavorited());
-                    recordInfo.put("completedAt", record.getCompletedAt());
-                    recordInfo.put("createdAt", record.getCreatedAt());
-                    recordInfo.put("updatedAt", record.getUpdatedAt());
+                    recordInfo.put("completedAt", formatDateSafely(record.getCompletedAt(), DATETIME_FORMAT));
+                    recordInfo.put("createdAt", formatDateSafely(record.getCreatedAt(), DATETIME_FORMAT));
+                    recordInfo.put("updatedAt", formatDateSafely(record.getUpdatedAt(), DATETIME_FORMAT));
                     taskInfo.put("record", recordInfo);
                 } else {
                     taskInfo.put("record", null);
@@ -300,6 +320,35 @@ public class ChallengeController {
                 return AjaxResult.error("备注长度不能超过500个字符");
             }
             
+            // 验证地点长度
+            if (request.getLocation() != null && request.getLocation().length() > 200) {
+                return AjaxResult.error("地点长度不能超过200个字符");
+            }
+            
+            // 验证天气长度
+            if (request.getWeather() != null && request.getWeather().length() > 50) {
+                return AjaxResult.error("天气描述长度不能超过50个字符");
+            }
+            
+            // 验证感受长度
+            if (request.getFeeling() != null && request.getFeeling().length() > 500) {
+                return AjaxResult.error("感受长度不能超过500个字符");
+            }
+            
+            // 验证日期格式
+            if (request.getCompletedDate() != null && !request.getCompletedDate().isEmpty()) {
+                if (!isValidDateFormat(request.getCompletedDate(), "yyyy-MM-dd")) {
+                    return AjaxResult.error("日期格式不正确，应为 YYYY-MM-DD");
+                }
+            }
+            
+            // 验证时间格式
+            if (request.getCompletedTime() != null && !request.getCompletedTime().isEmpty()) {
+                if (!isValidTimeFormat(request.getCompletedTime())) {
+                    return AjaxResult.error("时间格式不正确，应为 HH:MM");
+                }
+            }
+            
             // 处理照片URL，将完整URL转换为相对路径存储
             String photoUrl = request.getPhotoUrl();
             String relativePhotoUrl = photoUrl;
@@ -314,7 +363,12 @@ public class ChallengeController {
                 request.getTaskId(), 
                 request.getCompleted(), 
                 relativePhotoUrl, 
-                request.getNote());
+                request.getNote(),
+                request.getLocation(),
+                request.getCompletedDate(),
+                request.getCompletedTime(),
+                request.getWeather(),
+                request.getFeeling());
             
             // 构造返回数据，将相对路径转换为完整URL
             Map<String, Object> result = new HashMap<>();
@@ -323,7 +377,12 @@ public class ChallengeController {
             result.put("photoUrl", record.getPhotoUrl() != null ? 
                 buildFullImageUrl(httpServletRequest, record.getPhotoUrl()) : null);
             result.put("note", record.getNote());
-            result.put("completedAt", record.getCompletedAt());
+            result.put("location", record.getLocation());
+            result.put("completedDate", formatDateSafely(record.getCompletedDate(), DATE_FORMAT));
+            result.put("completedTime", formatDateSafely(record.getCompletedTime(), TIME_FORMAT));
+            result.put("weather", record.getWeather());
+            result.put("feeling", record.getFeeling());
+            result.put("completedAt", formatDateSafely(record.getCompletedAt(), DATETIME_FORMAT));
             
             return AjaxResult.success("操作成功", result);
         } catch (Exception e) {
@@ -414,6 +473,53 @@ public class ChallengeController {
      * @param fileName 文件名（相对路径）
      * @return 完整的图片访问URL
      */
+    
+    /**
+     * 验证日期格式是否正确
+     * 
+     * @param dateStr 日期字符串
+     * @param format 期望的日期格式
+     * @return 是否有效
+     */
+    private boolean isValidDateFormat(String dateStr, String format) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            sdf.setLenient(false);
+            sdf.parse(dateStr);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 验证时间格式是否正确 (HH:mm)
+     * 
+     * @param timeStr 时间字符串
+     * @return 是否有效
+     */
+    private boolean isValidTimeFormat(String timeStr) {
+        return timeStr.matches("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$|^24:00$");
+    }
+    
+    /**
+     * 安全地格式化日期为字符串
+     * 
+     * @param date 日期对象
+     * @param formatter 格式化器
+     * @return 格式化后的字符串或null
+     */
+    private String formatDateSafely(Date date, SimpleDateFormat formatter) {
+        if (date == null) {
+            return null;
+        }
+        try {
+            return formatter.format(date);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
     private String buildFullImageUrl(HttpServletRequest request, String fileName) {
         String scheme;
         String serverName;

@@ -75,9 +75,14 @@ public interface IChallengeRecordService {
      * @param completed 是否完成
      * @param photoUrl 照片URL（可选）
      * @param note 备注（可选）
+     * @param location 完成地点（可选）
+     * @param completedDate 完成日期（可选）
+     * @param completedTime 完成时间（可选）
+     * @param weather 完成时的天气（可选）
+     * @param feeling 完成时的感受（可选）
      * @return 用户挑战记录
      */
-    public ChallengeRecord completeTask(Long userId, Long taskId, Boolean completed, String photoUrl, String note);
+    public ChallengeRecord completeTask(Long userId, Long taskId, Boolean completed, String photoUrl, String note, String location, String completedDate, String completedTime, String weather, String feeling);
     
     /**
      * 收藏/取消收藏任务

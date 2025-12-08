@@ -37,6 +37,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by created_at desc
     </select>
     
+    <select id="selectHeartWallProjectsByUserOrPartnerId" parameterType="map" resultMap="HeartWallProjectResult">
+        <include refid="selectHeartWallProjectVo"/>
+        where user_id in
+        <foreach item="id" collection="userIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        order by created_at desc
+    </select>
+    
     <select id="selectHeartWallProjectById" parameterType="Long" resultMap="HeartWallProjectResult">
         <include refid="selectHeartWallProjectVo"/>
         where id = #{id}

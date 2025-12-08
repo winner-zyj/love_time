@@ -28,6 +28,14 @@ public interface HeartWallProjectMapper {
     public List<HeartWallProject> selectHeartWallProjectsByUserId(@Param("userId") Long userId);
     
     /**
+     * 查询用户及其情侣的心形墙项目列表
+     * 
+     * @param userIds 用户ID列表
+     * @return 心形墙项目集合
+     */
+    public List<HeartWallProject> selectHeartWallProjectsByUserOrPartnerId(@Param("userIds") List<Long> userIds);
+    
+    /**
      * 根据ID查询心形墙项目
      * 
      * @param id 心形墙项目ID

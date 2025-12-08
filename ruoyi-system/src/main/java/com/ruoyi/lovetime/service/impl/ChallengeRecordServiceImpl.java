@@ -1,5 +1,7 @@
 package com.ruoyi.lovetime.service.impl;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -23,6 +25,9 @@ import com.ruoyi.common.core.domain.lovetime.ChallengeTask;
 public class ChallengeRecordServiceImpl implements IChallengeRecordService {
     @Autowired
     private ChallengeRecordMapper challengeRecordMapper;
+    
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
     
     @Autowired
     private IChallengeTaskService challengeTaskService;
@@ -106,6 +111,42 @@ public class ChallengeRecordServiceImpl implements IChallengeRecordService {
     }
     
     /**
+     * 解析日期字符串为Date对象
+     * 
+     * @param dateStr 日期字符串，格式为 yyyy-MM-dd
+     * @return Date对象或null（如果解析失败）
+     */
+    private Date parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            return DATE_FORMAT.parse(dateStr);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+    
+    /**
+     * 解析时间字符串为Date对象
+     * 
+     * @param timeStr 时间字符串，格式为 HH:mm
+     * @return Date对象或null（如果解析失败）
+     */
+    private Date parseTime(String timeStr) {
+        if (timeStr == null || timeStr.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            return TIME_FORMAT.parse(timeStr);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+    
+    /**
      * 标记任务完成/取消
      * 
      * @param userId 用户ID
@@ -113,11 +154,16 @@ public class ChallengeRecordServiceImpl implements IChallengeRecordService {
      * @param completed 是否完成
      * @param photoUrl 照片URL（可选）
      * @param note 备注（可选）
+     * @param location 完成地点（可选）
+     * @param completedDate 完成日期（可选）
+     * @param completedTime 完成时间（可选）
+     * @param weather 完成时的天气（可选）
+     * @param feeling 完成时的感受（可选）
      * @return 用户挑战记录
      */
     @Override
     @Transactional
-    public ChallengeRecord completeTask(Long userId, Long taskId, Boolean completed, String photoUrl, String note) {
+    public ChallengeRecord completeTask(Long userId, Long taskId, Boolean completed, String photoUrl, String note, String location, String completedDate, String completedTime, String weather, String feeling) {
         // 验证任务是否存在
         ChallengeTask task = challengeTaskService.selectChallengeTaskById(taskId);
         if (task == null) {
@@ -135,6 +181,11 @@ public class ChallengeRecordServiceImpl implements IChallengeRecordService {
             record.setStatus(completed ? "completed" : "pending");
             record.setPhotoUrl(completed ? photoUrl : null);
             record.setNote(completed ? note : null);
+            record.setLocation(completed ? location : null);
+            record.setCompletedDate(completed ? parseDate(completedDate) : null);
+            record.setCompletedTime(completed ? parseTime(completedTime) : null);
+            record.setWeather(completed ? weather : null);
+            record.setFeeling(completed ? feeling : null);
             record.setIsFavorited(false);
             record.setCompletedAt(completed ? new Date() : null);
             record.setCreatedAt(new Date());
@@ -145,6 +196,11 @@ public class ChallengeRecordServiceImpl implements IChallengeRecordService {
             record.setStatus(completed ? "completed" : "pending");
             record.setPhotoUrl(completed ? photoUrl : null);
             record.setNote(completed ? note : null);
+            record.setLocation(completed ? location : null);
+            record.setCompletedDate(completed ? parseDate(completedDate) : null);
+            record.setCompletedTime(completed ? parseTime(completedTime) : null);
+            record.setWeather(completed ? weather : null);
+            record.setFeeling(completed ? feeling : null);
             record.setCompletedAt(completed ? new Date() : null);
             record.setUpdatedAt(new Date());
             challengeRecordMapper.updateChallengeRecord(record);

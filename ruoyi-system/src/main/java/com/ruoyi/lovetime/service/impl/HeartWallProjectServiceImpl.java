@@ -54,6 +54,17 @@ public class HeartWallProjectServiceImpl implements IHeartWallProjectService {
     }
     
     /**
+     * 查询用户及其情侣的心形墙项目列表
+     * 
+     * @param userIds 用户ID列表
+     * @return 心形墙项目集合
+     */
+    @Override
+    public List<HeartWallProject> selectHeartWallProjectsByUserOrPartnerId(List<Long> userIds) {
+        return heartWallProjectMapper.selectHeartWallProjectsByUserOrPartnerId(userIds);
+    }
+    
+    /**
      * 新增心形墙项目
      * 
      * @param heartWallProject 心形墙项目
