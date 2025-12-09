@@ -51,6 +51,11 @@ public class CompleteTaskRequest {
      * 完成时的感受
      */
     private String feeling;
+    
+    /**
+     * 目标用户ID（用于修改情侣记录）
+     */
+    private Long targetUserId;
 
     public CompleteTaskRequest() {
     }
@@ -65,6 +70,19 @@ public class CompleteTaskRequest {
         this.completedTime = completedTime;
         this.weather = weather;
         this.feeling = feeling;
+    }
+    
+    public CompleteTaskRequest(Long taskId, Boolean completed, String photoUrl, String note, String location, String completedDate, String completedTime, String weather, String feeling, Long targetUserId) {
+        this.taskId = taskId;
+        this.completed = completed;
+        this.photoUrl = photoUrl;
+        this.note = note;
+        this.location = location;
+        this.completedDate = completedDate;
+        this.completedTime = completedTime;
+        this.weather = weather;
+        this.feeling = feeling;
+        this.targetUserId = targetUserId;
     }
 
     public Long getTaskId() {
@@ -138,6 +156,14 @@ public class CompleteTaskRequest {
     public void setFeeling(String feeling) {
         this.feeling = feeling;
     }
+    
+    public Long getTargetUserId() {
+        return targetUserId;
+    }
+    
+    public void setTargetUserId(Long targetUserId) {
+        this.targetUserId = targetUserId;
+    }
 
     @Override
     public String toString() {
@@ -151,6 +177,7 @@ public class CompleteTaskRequest {
                 ", completedTime='" + completedTime + '\'' +
                 ", weather='" + weather + '\'' +
                 ", feeling='" + feeling + '\'' +
+                ", targetUserId='" + targetUserId + '\'' +
                 '}';
     }
 }

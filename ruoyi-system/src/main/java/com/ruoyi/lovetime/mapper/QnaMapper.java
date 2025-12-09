@@ -29,6 +29,14 @@ public interface QnaMapper {
     List<QnaQuestion> selectCustomQuestionsByUserId(@Param("userId") Long userId);
     
     /**
+     * 查询情侣双方的自定义问题（按创建时间倒序，仅返回激活的问题）
+     * 
+     * @param userId 用户ID
+     * @return 情侣双方的自定义问题列表
+     */
+    List<QnaQuestion> selectAllCustomQuestionsForCouple(@Param("userId") Long userId);
+    
+    /**
      * 根据ID查询问题
      * 
      * @param questionId 问题ID

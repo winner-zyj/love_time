@@ -43,6 +43,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         ORDER BY created_at DESC
     </select>
     
+    <!-- 查询情侣双方的自定义问题（按创建时间倒序，仅返回激活的问题） -->
+    <select id="selectAllCustomQuestionsForCouple" parameterType="Long" resultMap="QnaQuestionResult">
+        SELECT DISTINCT q.id, q.question_text, q.category, q.created_by, q.order_index, q.is_active, q.created_at, q.updated_at
+        FROM at_questions q
+        INNER JOIN at_couple_relationships cr ON (
+            (cr.user1_id = #{userId} AND q.created_by = cr.user2_id) OR 
+            (cr.user2_id = #{userId} AND q.created_by = cr.user1_id) OR
+            q.created_by = #{userId}
+        )
+        WHERE q.category = 'custom' 
+        AND q.is_active = 1
+        AND cr.status = 'active'
+        ORDER BY q.created_at DESC
+    </select>
+    
     <!-- 根据ID查询问题 -->
     <select id="selectQuestionById" parameterType="Long" resultMap="QnaQuestionResult">
         SELECT id, question_text, category, created_by, order_index, is_active, created_at, updated_at

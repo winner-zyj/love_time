@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -48,8 +49,8 @@ public class QnaServiceImpl implements IQnaService {
         List<QnaQuestion> defaultQuestions = qnaMapper.selectDefaultQuestions();
         result.put("defaultQuestions", defaultQuestions);
         
-        // 获取用户自定义问题（按创建时间倒序）
-        List<QnaQuestion> customQuestions = qnaMapper.selectCustomQuestionsByUserId(userId);
+        // 获取用户及其情侣的自定义问题（按创建时间倒序）
+        List<QnaQuestion> customQuestions = qnaMapper.selectAllCustomQuestionsForCouple(userId);
         result.put("customQuestions", customQuestions);
         
         return result;

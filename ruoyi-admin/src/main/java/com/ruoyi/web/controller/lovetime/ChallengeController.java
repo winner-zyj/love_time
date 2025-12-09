@@ -140,29 +140,63 @@ public class ChallengeController {
                 taskInfo.put("updatedAt", formatDateSafely(task.getUpdatedAt(), DATETIME_FORMAT));
                 
                 // 获取用户对该任务的记录
-                ChallengeRecord record = challengeRecordService.selectChallengeRecordByUserAndTask(
+                ChallengeRecord currentUserRecord = challengeRecordService.selectChallengeRecordByUserAndTask(
                     loginUser.getUserId(), task.getId());
                 
-                if (record != null) {
-                    Map<String, Object> recordInfo = new HashMap<>();
-                    recordInfo.put("status", record.getStatus());
-                    // 将相对路径转换为完整URL
-                    recordInfo.put("photoUrl", record.getPhotoUrl() != null ? 
-                        buildFullImageUrl(request, record.getPhotoUrl()) : null);
-                    recordInfo.put("note", record.getNote());
-                    recordInfo.put("location", record.getLocation());
-                    recordInfo.put("completedDate", formatDateSafely(record.getCompletedDate(), DATE_FORMAT));
-                    recordInfo.put("completedTime", formatDateSafely(record.getCompletedTime(), TIME_FORMAT));
-                    recordInfo.put("weather", record.getWeather());
-                    recordInfo.put("feeling", record.getFeeling());
-                    recordInfo.put("isFavorited", record.getIsFavorited());
-                    recordInfo.put("completedAt", formatDateSafely(record.getCompletedAt(), DATETIME_FORMAT));
-                    recordInfo.put("createdAt", formatDateSafely(record.getCreatedAt(), DATETIME_FORMAT));
-                    recordInfo.put("updatedAt", formatDateSafely(record.getUpdatedAt(), DATETIME_FORMAT));
-                    taskInfo.put("record", recordInfo);
-                } else {
-                    taskInfo.put("record", null);
+                // 获取情侣对该任务的记录
+                ChallengeRecord partnerRecord = null;
+                if (relationship != null && "active".equals(relationship.getStatus())) {
+                    Long partnerId = loginUser.getUserId().equals(relationship.getUser1Id()) ? 
+                        relationship.getUser2Id() : relationship.getUser1Id();
+                    partnerRecord = challengeRecordService.selectChallengeRecordByUserAndTask(partnerId, task.getId());
                 }
+                
+                // 构造记录列表，包含当前用户和情侣的记录
+                List<Map<String, Object>> records = new ArrayList<>();
+                
+                // 添加当前用户的记录
+                if (currentUserRecord != null) {
+                    Map<String, Object> currentUserRecordInfo = new HashMap<>();
+                    currentUserRecordInfo.put("status", currentUserRecord.getStatus());
+                    // 将相对路径转换为完整URL
+                    currentUserRecordInfo.put("photoUrl", currentUserRecord.getPhotoUrl() != null ? 
+                        buildFullImageUrl(request, currentUserRecord.getPhotoUrl()) : null);
+                    currentUserRecordInfo.put("note", currentUserRecord.getNote());
+                    currentUserRecordInfo.put("location", currentUserRecord.getLocation());
+                    currentUserRecordInfo.put("completedDate", formatDateSafely(currentUserRecord.getCompletedDate(), DATE_FORMAT));
+                    currentUserRecordInfo.put("completedTime", formatDateSafely(currentUserRecord.getCompletedTime(), TIME_FORMAT));
+                    currentUserRecordInfo.put("weather", currentUserRecord.getWeather());
+                    currentUserRecordInfo.put("feeling", currentUserRecord.getFeeling());
+                    currentUserRecordInfo.put("isFavorited", currentUserRecord.getIsFavorited());
+                    currentUserRecordInfo.put("completedAt", formatDateSafely(currentUserRecord.getCompletedAt(), DATETIME_FORMAT));
+                    currentUserRecordInfo.put("createdAt", formatDateSafely(currentUserRecord.getCreatedAt(), DATETIME_FORMAT));
+                    currentUserRecordInfo.put("updatedAt", formatDateSafely(currentUserRecord.getUpdatedAt(), DATETIME_FORMAT));
+                    currentUserRecordInfo.put("source", "currentUser"); // 添加记录来源标识
+                    records.add(currentUserRecordInfo);
+                }
+                
+                // 添加情侣的记录
+                if (partnerRecord != null) {
+                    Map<String, Object> partnerRecordInfo = new HashMap<>();
+                    partnerRecordInfo.put("status", partnerRecord.getStatus());
+                    // 将相对路径转换为完整URL
+                    partnerRecordInfo.put("photoUrl", partnerRecord.getPhotoUrl() != null ? 
+                        buildFullImageUrl(request, partnerRecord.getPhotoUrl()) : null);
+                    partnerRecordInfo.put("note", partnerRecord.getNote());
+                    partnerRecordInfo.put("location", partnerRecord.getLocation());
+                    partnerRecordInfo.put("completedDate", formatDateSafely(partnerRecord.getCompletedDate(), DATE_FORMAT));
+                    partnerRecordInfo.put("completedTime", formatDateSafely(partnerRecord.getCompletedTime(), TIME_FORMAT));
+                    partnerRecordInfo.put("weather", partnerRecord.getWeather());
+                    partnerRecordInfo.put("feeling", partnerRecord.getFeeling());
+                    partnerRecordInfo.put("isFavorited", partnerRecord.getIsFavorited());
+                    partnerRecordInfo.put("completedAt", formatDateSafely(partnerRecord.getCompletedAt(), DATETIME_FORMAT));
+                    partnerRecordInfo.put("createdAt", formatDateSafely(partnerRecord.getCreatedAt(), DATETIME_FORMAT));
+                    partnerRecordInfo.put("updatedAt", formatDateSafely(partnerRecord.getUpdatedAt(), DATETIME_FORMAT));
+                    partnerRecordInfo.put("source", "partner"); // 添加记录来源标识
+                    records.add(partnerRecordInfo);
+                }
+                
+                taskInfo.put("records", records);
                 
                 taskWithRecords.add(taskInfo);
             }
@@ -305,6 +339,9 @@ public class ChallengeController {
                 return AjaxResult.error("用户未登录");
             }
             
+            // 获取情侣关系
+            CoupleRelationship relationship = coupleRelationshipService.selectCoupleRelationshipByUserId(loginUser.getUserId());
+            
             // 验证任务ID
             if (request.getTaskId() == null) {
                 return AjaxResult.error("任务ID不能为空");
@@ -357,9 +394,24 @@ public class ChallengeController {
                 relativePhotoUrl = extractRelativePathFromUrl(photoUrl);
             }
             
+            // 确定要修改记录的用户ID，默认为当前用户
+            Long targetUserId = loginUser.getUserId();
+            
+            // 如果请求中指定了要修改情侣的记录，则使用情侣的用户ID
+            if (request.getTargetUserId() != null && !request.getTargetUserId().equals(loginUser.getUserId())) {
+                // 验证目标用户是否为情侣
+                if (relationship != null && "active".equals(relationship.getStatus())) {
+                    Long partnerId = loginUser.getUserId().equals(relationship.getUser1Id()) ? 
+                        relationship.getUser2Id() : relationship.getUser1Id();
+                    if (request.getTargetUserId().equals(partnerId)) {
+                        targetUserId = partnerId;
+                    }
+                }
+            }
+            
             // 标记任务完成/取消
             ChallengeRecord record = challengeRecordService.completeTask(
-                loginUser.getUserId(), 
+                targetUserId, 
                 request.getTaskId(), 
                 request.getCompleted(), 
                 relativePhotoUrl, 
